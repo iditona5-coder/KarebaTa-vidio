@@ -584,7 +584,7 @@ class _MagazineFullPageCardState extends State<MagazineFullPageCard> {
                               ),
                             ),
                             Text(
-                              "beritamu suaramu",
+                              "beritamu, suaramu",
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFFEAA000),
                                 fontSize: 9.5,
@@ -608,13 +608,38 @@ class _MagazineFullPageCardState extends State<MagazineFullPageCard> {
                 ),
                 const Spacer(),
 
-                // Metadata: Lokasi · Waktu Unggah · Nama Penulis
-                Text(
-                  '\${article.location}  ·  \$timeStr  ·  \${article.authorName}',
-                  style: const TextStyle(
-                    color: Color(0xFFD6D3D1),
-                    fontSize: 12,
-                    letterSpacing: 0.3,
+                // Metadata: Lokasi (Kuning) · Waktu Unggah · Nama Penulis (Hijau)
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 12, letterSpacing: 0.3),
+                    children: [
+                      TextSpan(
+                        text: '\${article.authorName}',
+                        style: const TextStyle(
+                          color: Color(0xFF4ADE80), // Hijau Penulis/Pengguna
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '  ·  ',
+                        style: TextStyle(color: Color(0xFFD6D3D1)),
+                      ),
+                      TextSpan(
+                        text: '\$timeStr',
+                        style: const TextStyle(color: Color(0xFFD6D3D1)), // Waktu di kanan nama pengguna
+                      ),
+                      const TextSpan(
+                        text: '  ·  ',
+                        style: TextStyle(color: Color(0xFFD6D3D1)),
+                      ),
+                      TextSpan(
+                        text: article.location,
+                        style: const TextStyle(
+                          color: Color(0xFFFACC15), // Kuning Lokasi (ringan, tidak lebih tebal dari nama pengguna)
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 10),

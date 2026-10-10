@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { BottomTabId, NewsArticle, NewsPhoto, UserProfile, ViewportMode } from '../types/news';
+import { ActiveUpload, BottomTabId, NewsArticle, NewsPhoto, UserProfile, ViewportMode } from '../types/news';
 import { INITIAL_NEWS_ARTICLES } from '../data/initialNews';
 import {
   auth,
@@ -28,6 +28,7 @@ interface CreateNewsInput {
   location: string;
   category: NewsArticle['category'];
   photos: NewsPhoto[];
+  onProgress?: (percent: number) => void;
 }
 
 export type FirebaseConnectionStatus = 'connected' | 'connecting' | 'offline';
@@ -66,6 +67,8 @@ interface KarebataContextType {
   setPendingMedia: (media: NewsPhoto | null) => void;
   isMediaLoading: boolean;
   setIsMediaLoading: (loading: boolean) => void;
+  activeUpload: ActiveUpload | null;
+  setActiveUpload: React.Dispatch<React.SetStateAction<ActiveUpload | null>>;
   firebaseStatus: FirebaseConnectionStatus;
   firebaseProjectId: string;
   imagekitStatus: ImageKitConnectionStatus;
@@ -139,6 +142,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pendingMedia, setPendingMedia] = useState<NewsPhoto | null>(null);
   const [isMediaLoading, setIsMediaLoading] = useState(false);
+  const [activeUpload, setActiveUpload] = useState<ActiveUpload | null>(null);
   const [firebaseStatus, setFirebaseStatus] = useState<FirebaseConnectionStatus>('connecting');
   const [imagekitStatus, setImagekitStatus] = useState<ImageKitConnectionStatus>('connected');
   const [imagekitUploadProgress, setImagekitUploadProgress] = useState<number>(0);
@@ -318,6 +322,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const readTimeMinutes = Math.max(2, Math.ceil(wordCount / 160));
 
     // Pastikan media diunggah ke ImageKit CDN jika masih berupa dataURL
+    input.onProgress?.(30);
     const processedPhotos: NewsPhoto[] = await Promise.all(
       input.photos.map(async (photo) => {
         let finalUrl = photo.url;
@@ -329,7 +334,8 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const isVid = photo.mediaType === 'video';
             const res = await uploadToImageKit(finalUrl, {
               folder: isVid ? '/karebata/videos' : '/karebata/photos',
-              tags: ['karebata', 'warga_feed', isVid ? 'video' : 'foto']
+              tags: ['karebata', 'warga_feed', isVid ? 'video' : 'foto'],
+              onProgress: (pct) => input.onProgress?.(30 + Math.floor(pct * 0.4))
             });
             finalUrl = res.url;
             if (!finalThumb) finalThumb = res.thumbnailUrl;
@@ -359,6 +365,8 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       })
     );
 
+    input.onProgress?.(75);
+
     const newArticle: NewsArticle = {
       id: `kareba-${Date.now()}`,
       title: input.title.trim(),
@@ -380,7 +388,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Update state aplikasi seketika untuk UX responsif
     setArticles((prev) => [newArticle, ...prev]);
     setActiveFeedIndex(0);
-    showToast('Kabar berhasil diterbitkan ke Beranda Kareba’Ta & Firebase');
+    input.onProgress?.(90);
 
     // Simpan ke Firestore (kareba-ta-728d0)
     try {
@@ -389,6 +397,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         authorUid: auth.currentUser?.uid || user.uid,
         createdAt: now.toISOString()
       });
+      input.onProgress?.(100);
     } catch (err) {
       handleFirestoreError(err, OperationType.CREATE, `articles/${newArticle.id}`);
     }
@@ -523,6 +532,8 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setPendingMedia,
         isMediaLoading,
         setIsMediaLoading,
+        activeUpload,
+        setActiveUpload,
         firebaseStatus,
         firebaseProjectId: firebaseConfig.projectId,
         imagekitStatus,

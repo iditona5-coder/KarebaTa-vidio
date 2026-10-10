@@ -39,3 +39,13 @@ export interface UserProfile {
   isSignedIn: boolean;
   photoURL?: string;
 }
+
+export interface ActiveUpload {
+  id: string;
+  title: string;
+  thumbnailUrl?: string;
+  mediaType?: 'image' | 'video';
+  progress: number;
+  status: 'uploading' | 'completed' | 'error';
+  statusText?: string;
+}

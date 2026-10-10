@@ -67,8 +67,8 @@ export const NewsDetailSheet: React.FC = () => {
       aria-labelledby="detail-article-title"
     >
       <div className="bg-white w-full max-w-3xl h-[94vh] sm:h-[90vh] sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-stone-200 animate-in fade-in duration-150">
-        {/* Sticky Editorial Top App Bar */}
-        <header className="h-14 px-4 sm:px-6 border-b border-stone-200 bg-white/95 backdrop-blur-md flex items-center justify-between shrink-0">
+        {/* Sticky Editorial Top App Bar (Bar Putih Bersih) */}
+        <header className="h-14 px-4 sm:px-6 border-b border-stone-200 bg-white flex items-center justify-between shrink-0 shadow-xs">
           <button
             type="button"
             onClick={closeArticleDetail}
@@ -201,13 +201,16 @@ export const NewsDetailSheet: React.FC = () => {
 
           {/* Editorial Content Column */}
           <article className="max-w-2xl mx-auto px-6 sm:px-10 py-8 sm:py-10">
-            {/* Unboxed Metadata: Kategori · Lokasi · WaktuBaca */}
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-emerald-800 tracking-wide">
-              <span>{selectedArticle.category}</span>
-              <span aria-hidden="true">·</span>
-              <span>{selectedArticle.location}</span>
-              <span aria-hidden="true">·</span>
-              <span className="tabular-nums">{selectedArticle.readTimeMinutes} menit baca</span>
+            {/* Unboxed Metadata: Kategori · Lokasi (Kuning) · WaktuBaca */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide">
+              <span className="text-stone-600">{selectedArticle.category}</span>
+              <span aria-hidden="true" className="text-stone-300">·</span>
+              <span className="text-amber-600 font-normal flex items-center gap-0.5">
+                <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                {selectedArticle.location}
+              </span>
+              <span aria-hidden="true" className="text-stone-300">·</span>
+              <span className="tabular-nums text-stone-500">{selectedArticle.readTimeMinutes} menit baca</span>
             </div>
 
             {/* Deskripsi Berita dengan Ukuran Sebesar Judul */}
@@ -218,11 +221,14 @@ export const NewsDetailSheet: React.FC = () => {
               {selectedArticle.summary}
             </h1>
 
-            {/* Penulis & Tanggal Lengkap */}
+            {/* Penulis (Hijau) & Tanggal Lengkap */}
             <div className="mt-6 pt-5 pb-5 border-y border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-stone-500">
               <div>
-                <span className="text-stone-900 font-semibold">{selectedArticle.authorName}</span>
-                <span className="mx-1.5" aria-hidden="true">·</span>
+                <span className="text-emerald-700 font-bold flex items-center gap-1 inline-flex">
+                  <span className="material-icons text-emerald-700" style={{ fontSize: '14px' }}>person</span>
+                  {selectedArticle.authorName}
+                </span>
+                <span className="mx-1.5 text-stone-300" aria-hidden="true">·</span>
                 <span>{selectedArticle.authorRole}</span>
               </div>
               <time className="tabular-nums text-stone-500">{selectedArticle.formattedDate}</time>
@@ -298,8 +304,12 @@ export const NewsDetailSheet: React.FC = () => {
 
             {/* Bottom Action Bar inside Article */}
             <div className="mt-10 pt-6 border-t border-stone-200 flex flex-wrap items-center justify-between gap-4">
-              <div className="text-xs text-stone-500">
-                Diterbitkan di <span className="font-semibold text-stone-800">Kareba&apos;Ta</span> · {selectedArticle.location}
+              <div className="text-xs text-stone-500 flex items-center gap-1">
+                <span>Diterbitkan di <span className="font-semibold text-stone-800">Kareba&apos;Ta</span> ·</span>
+                <span className="text-amber-600 font-normal flex items-center gap-0.5">
+                  <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                  {selectedArticle.location}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <button

@@ -81,50 +81,50 @@ const KarebataShell: React.FC = () => {
         <div
           className={`bg-white flex flex-col overflow-hidden transition-all duration-200 ${activeViewportPreset.containerClass}`}
         >
-          {/* Header Atas Hitam Solid untuk Halaman Cari, Tersimpan, dan Akun */}
+          {/* Header Atas Putih Solid untuk Halaman Cari, Tersimpan, dan Akun */}
           {activeTab !== 'beranda' && activeTab !== 'buat' && (
-            <header className="h-[60px] w-full bg-black border-b border-white/10 text-white px-5 flex items-center justify-between shrink-0 z-50 select-none">
+            <header className="h-[60px] w-full bg-white border-b border-stone-200 text-stone-900 px-4 sm:px-5 flex items-center justify-between shrink-0 z-50 select-none shadow-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab('beranda')}
-                className="inline-flex items-center gap-2 text-white hover:text-emerald-300 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 text-stone-900 hover:text-emerald-700 transition-colors cursor-pointer"
               >
-                <ArrowLeft className="w-5 h-5 text-white/80 shrink-0" />
-                <KarebataBrandLogo pinSize={24} showTagline={true} />
+                <ArrowLeft className="w-6 h-6 text-stone-800 shrink-0" strokeWidth={2.2} />
+                <KarebataBrandLogo pinSize={32} showTagline={true} theme="light" />
               </button>
 
-              <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('cari')}
                   aria-label="Cari Berita"
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'cari'
-                      ? 'bg-emerald-700 text-white'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
+                      ? 'text-emerald-700'
+                      : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >
-                  <Search className="w-[22px] h-[22px]" strokeWidth={2.2} />
+                  <Search className="w-[26px] h-[26px]" strokeWidth={activeTab === 'cari' ? 2.3 : 2} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('buat')}
                   aria-label="Buat Kabar"
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer bg-white/15 hover:bg-white/25 text-white"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer text-stone-900 hover:bg-stone-100/80"
                 >
-                  <Camera className="w-[22px] h-[22px]" strokeWidth={2.2} />
+                  <Camera className="w-[26px] h-[26px]" strokeWidth={2} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('akun')}
                   aria-label="Akun & Profil"
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'akun' || activeTab === 'tersimpan'
-                      ? 'bg-emerald-700 text-white'
-                      : 'bg-white/15 hover:bg-white/25 text-white'
+                      ? 'text-emerald-700'
+                      : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >
-                  <User className="w-[22px] h-[22px]" strokeWidth={2.2} />
+                  <User className="w-[26px] h-[26px]" strokeWidth={activeTab === 'akun' || activeTab === 'tersimpan' ? 2.3 : 2} />
                 </button>
               </div>
             </header>

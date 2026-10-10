@@ -5,6 +5,7 @@ export interface KarebataBrandLogoProps {
   pinSize?: number;
   showTagline?: boolean;
   variant?: 'badge' | 'transparent';
+  theme?: 'dark' | 'light';
   onClick?: () => void;
 }
 
@@ -15,20 +16,26 @@ export interface KarebataBrandLogoProps {
  * 2. Tulisan "Kareba": Hijau tua botol (#006837) font Poppins 900 Black.
  * 3. Tanda Petik "'": Hijau tua botol (#006837) dari font yang sama.
  * 4. Tulisan "Ta": Kuning Emas (#EAA000) font Poppins 900 Black.
- * 5. Tagline: "beritamu suaramu" huruf kecil warna Kuning Emas (#EAA000) font Poppins 700.
+ * 5. Tagline: "beritamu, suaramu" huruf kecil warna Kuning Emas (#EAA000) font Poppins 700.
  */
 export const KarebataBrandLogo: React.FC<KarebataBrandLogoProps> = ({
   className = '',
   pinSize = 28,
   showTagline = true,
   variant = 'transparent',
+  theme = 'light',
   onClick
 }) => {
   // Warna Resmi Identitas Brand Sesuai Foto
   const BRAND_YELLOW = '#EAA000'; // Kuning Emas Pin, Ta & Tagline
-  // Gunakan hijau cerah berkontras tinggi di background gelap jika transparan (tanpa bar putih)
   const isBadge = variant === 'badge';
-  const BRAND_GREEN = isBadge ? '#006837' : '#00A859';
+  const isLight = isBadge || theme === 'light';
+  // Hijau tua botol (#006837) di latar belakang putih / terang, hijau cerah (#00A859) di latar gelap
+  const BRAND_GREEN = isLight ? '#006837' : '#00A859';
+
+  // Perhitungan ukuran tipografi dinamis & proporsional berdasarkan pinSize (tampilan profesional)
+  const titleFontSize = Math.max(20, Math.round(pinSize * 0.74));
+  const taglineFontSize = Math.max(9.5, Math.round(pinSize * 0.33));
 
   return (
     <div
@@ -90,7 +97,10 @@ export const KarebataBrandLogo: React.FC<KarebataBrandLogoProps> = ({
       {/* 2. TEKS KAREBA'TA & TAGLINE BERITAMU SUARAMU */}
       <div className="flex flex-col justify-center leading-none">
         {/* Teks Utama: Kareba'Ta */}
-        <div className="flex items-center leading-none font-[900] tracking-[-0.02em] text-[18px] sm:text-[20.5px]">
+        <div
+          style={{ fontSize: `${titleFontSize}px` }}
+          className="flex items-center leading-none font-[900] tracking-[-0.025em]"
+        >
           {/* Kareba */}
           <span
             style={{ color: BRAND_GREEN }}
@@ -116,13 +126,13 @@ export const KarebataBrandLogo: React.FC<KarebataBrandLogoProps> = ({
           </span>
         </div>
 
-        {/* Tagline: beritamu suaramu */}
+        {/* Tagline: beritamu, suaramu */}
         {showTagline && (
           <div
-            style={{ color: BRAND_YELLOW }}
-            className="font-[700] text-[8.5px] sm:text-[9.5px] tracking-[0.05em] lowercase mt-[2px] leading-none"
+            style={{ color: BRAND_YELLOW, fontSize: `${taglineFontSize}px` }}
+            className="font-[700] tracking-[0.06em] lowercase mt-[2.5px] leading-none"
           >
-            beritamu suaramu
+            beritamu, suaramu
           </div>
         )}
       </div>
