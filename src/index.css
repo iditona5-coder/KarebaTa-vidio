@@ -114,22 +114,14 @@
   overflow: hidden;
 }
 
-.card-berita-media img.media-vertical,
-.card-berita-media video.media-vertical {
+.card-berita-media img,
+.card-berita-media video {
   width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  object-fit: cover !important;
-  object-position: center !important;
-  display: block;
-}
-
-.card-berita-media img.media-horizontal,
-.card-berita-media video.media-horizontal {
-  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   max-height: 100% !important;
-  object-fit: contain !important;
+  object-fit: cover !important;
   object-position: center !important;
   display: block;
 }
@@ -159,7 +151,7 @@
 }
 
 .btnShare {
-  color: #0095f6;
+  color: #006837;
   font-weight: 700;
   opacity: 0.3;
   pointer-events: none;
@@ -172,6 +164,7 @@
   opacity: 1;
   pointer-events: auto;
   cursor: pointer;
+  color: #006837;
 }
 
 .rowPost {

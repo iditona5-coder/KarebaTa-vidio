@@ -54,7 +54,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
         {/* Header */}
         <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between gap-4 bg-stone-50">
           <div className="flex items-center gap-3 min-w-0">
-            <Code2 className="w-5 h-5 text-emerald-800 shrink-0" />
+            <Code2 className="w-5 h-5 text-[#006837] shrink-0" />
             <div className="truncate">
               <h2 className="font-editorial text-lg font-semibold text-stone-900 truncate">
                 Arsitektur Kode Flutter Android — Kareba&apos;Ta
@@ -69,7 +69,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
             <button
               type="button"
               onClick={handleDownloadAll}
-              className="min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-800 text-white hover:bg-emerald-900 inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+              className="min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#006837] text-white hover:bg-[#00542c] inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
             >
               <Download className="w-4 h-4" />
               <span>Unduh Semua Berkas</span>
@@ -102,14 +102,14 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
                     onClick={() => setSelectedIndex(idx)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-800 text-white'
+                        ? 'bg-[#006837] text-white'
                         : 'text-stone-700 hover:bg-stone-200/70'
                     }`}
                   >
                     <div className="font-mono text-xs font-medium truncate">{file.path}</div>
                     <div
                       className={`text-[11px] mt-0.5 truncate ${
-                        isSelected ? 'text-emerald-100' : 'text-stone-500'
+                        isSelected ? 'text-white/90' : 'text-stone-500'
                       }`}
                     >
                       {file.title}
@@ -124,7 +124,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
           <div className="flex-1 flex flex-col overflow-hidden bg-stone-950 text-stone-100">
             <div className="px-5 py-3 bg-stone-900 border-b border-stone-800 flex items-center justify-between gap-4 shrink-0">
               <div className="min-w-0">
-                <div className="font-mono text-xs text-emerald-400 font-medium">
+                <div className="font-mono text-xs text-[#00A859] font-medium">
                   {activeFile.path}
                 </div>
                 <p className="text-xs text-stone-400 mt-0.5 truncate">{activeFile.description}</p>
@@ -136,7 +136,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
               >
                 {copiedPath === activeFile.path ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-[#00A859]" />
                     <span>Disalin</span>
                   </>
                 ) : (

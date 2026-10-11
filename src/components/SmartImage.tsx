@@ -225,9 +225,9 @@ export const SmartImage: React.FC<SmartImageProps> = ({
   if (hasError || !src) {
     return (
       <div
-        className={`flex flex-col items-center justify-center bg-gradient-to-br from-emerald-950 via-stone-900 to-stone-950 text-stone-300 p-6 text-center ${className}`}
+        className={`flex flex-col items-center justify-center bg-gradient-to-br from-[#003d20] via-stone-900 to-stone-950 text-stone-300 p-6 text-center ${className}`}
       >
-        <Newspaper className="w-10 h-10 text-emerald-500/70 mb-3" />
+        <Newspaper className="w-10 h-10 text-[#006837] mb-3" />
         <p className="font-editorial text-sm text-stone-200 max-w-xs line-clamp-2">{alt}</p>
       </div>
     );
@@ -349,18 +349,18 @@ export const SmartImage: React.FC<SmartImageProps> = ({
                 {/* Batang Terisi */}
                 <div
                   style={{ width: `${progressPercent}%` }}
-                  className="h-full bg-emerald-400 rounded-full"
+                  className="h-full bg-[#00A859] rounded-full"
                 />
                 {/* Titik Geser (Thumb) */}
                 <div
                   style={{ left: `${progressPercent}%` }}
-                  className="w-4 h-4 rounded-full bg-white border-2 border-emerald-500 shadow-md absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                  className="w-4 h-4 rounded-full bg-white border-2 border-[#006837] shadow-md absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
                 />
               </div>
             </div>
 
             {/* Indikator Waktu Durasi */}
-            <span className="text-[11px] font-mono font-semibold text-white/90 tabular-nums shrink-0 drop-shadow">
+            <span className="text-[11px] font-mono font-semibold text-white/90 tabular-nums shrink-0">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>

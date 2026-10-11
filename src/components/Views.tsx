@@ -24,7 +24,11 @@ import {
   ShieldCheck,
   Sparkles,
   UploadCloud,
-  FolderCheck
+  FolderCheck,
+  MoreVertical,
+  MoreHorizontal,
+  Share2,
+  Heart
 } from 'lucide-react';
 import { useKarebata } from '../context/KarebataContext';
 import { NewsArticle, NewsPhoto } from '../types/news';
@@ -514,7 +518,10 @@ export const BerandaView: React.FC = () => {
     uploadMediaToImageKit,
     user,
     activeUpload,
-    setActiveUpload
+    setActiveUpload,
+    toggleSaveArticle,
+    isArticleSaved,
+    showToast
   } = useKarebata();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -522,6 +529,27 @@ export const BerandaView: React.FC = () => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isFeedMuted, setIsFeedMuted] = useState(true);
   const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
+  const [moreMenuArticleId, setMoreMenuArticleId] = useState<string | null>(null);
+  const [likedArticleIds, setLikedArticleIds] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('kareba_liked_ids_v1');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleLikeArticle = (articleId: string) => {
+    setLikedArticleIds((prev) => {
+      const next = { ...prev, [articleId]: !prev[articleId] };
+      try {
+        localStorage.setItem('kareba_liked_ids_v1', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Pelacak tarikan langsung ke DOM (60fps tanpa re-render berat) & anti-kebablasan (1 swipe = 1 berita)
   const isTransitioningRef = useRef(false);
@@ -902,7 +930,7 @@ export const BerandaView: React.FC = () => {
           <div
             className={`p-2.5 sm:p-3 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all duration-300 ${
               activeUpload.status === 'completed'
-                ? 'bg-stone-900/95 text-white border-emerald-500/50 shadow-emerald-950/30'
+                ? 'bg-stone-900/95 text-white border-[#006837]/60 shadow-[#006837]/20'
                 : activeUpload.status === 'error'
                 ? 'bg-stone-900/95 text-white border-rose-500/50 shadow-rose-950/30'
                 : 'bg-stone-900/95 text-white border-white/20 shadow-black/50'
@@ -924,11 +952,11 @@ export const BerandaView: React.FC = () => {
                 )}
                 {activeUpload.status === 'uploading' && (
                   <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-amber-400 rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-[#EAA000] rounded-full animate-spin" />
                   </div>
                 )}
                 {activeUpload.status === 'completed' && (
-                  <div className="absolute inset-0 bg-emerald-600/80 flex items-center justify-center text-white">
+                  <div className="absolute inset-0 bg-[#006837]/90 flex items-center justify-center text-white">
                     <span className="material-icons text-base">check</span>
                   </div>
                 )}
@@ -940,14 +968,14 @@ export const BerandaView: React.FC = () => {
                   <span className="text-xs font-bold flex items-center gap-1.5 truncate">
                     {activeUpload.status === 'uploading' && (
                       <>
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
-                        <span className="text-amber-300 font-semibold">Sementara mengunggah...</span>
+                        <span className="w-2 h-2 rounded-full bg-[#EAA000] animate-pulse inline-block" />
+                        <span className="text-[#EAA000] font-semibold">Sementara mengunggah...</span>
                       </>
                     )}
                     {activeUpload.status === 'completed' && (
                       <>
-                        <span className="material-icons text-emerald-400 text-sm">check_circle</span>
-                        <span className="text-emerald-400 font-bold">Selesai diunggah!</span>
+                        <span className="material-icons text-[#00A859] text-sm">check_circle</span>
+                        <span className="text-[#00A859] font-bold">Selesai diunggah!</span>
                       </>
                     )}
                     {activeUpload.status === 'error' && (
@@ -971,10 +999,10 @@ export const BerandaView: React.FC = () => {
                   <div
                     className={`h-full transition-all duration-300 rounded-full ${
                       activeUpload.status === 'completed'
-                        ? 'bg-emerald-400'
+                        ? 'bg-[#00A859]'
                         : activeUpload.status === 'error'
                         ? 'bg-rose-400'
-                        : 'bg-gradient-to-r from-amber-400 via-emerald-400 to-sky-400'
+                        : 'bg-gradient-to-r from-[#EAA000] via-[#00A859] to-[#006837]'
                     }`}
                     style={{ width: `${Math.min(100, Math.max(5, activeUpload.progress))}%` }}
                   />
@@ -1087,48 +1115,178 @@ export const BerandaView: React.FC = () => {
                     isMuted={isFeedMuted}
                     preserveHorizontalRatio={false}
                     poster={coverPhoto?.thumbnailUrl}
-                    className="w-full h-auto max-h-full object-cover object-center pointer-events-none"
+                    className="w-full min-w-full h-auto max-h-full object-cover object-center pointer-events-none"
                   />
-                  {/* Lapisan transparan halus agar video/foto di balik deskripsi tetap terlihat jelas */}
-                  <div
-                    className={`absolute inset-x-0 bottom-0 pointer-events-none transition-all duration-200 ${
-                      isExpanded
-                        ? 'h-full bg-black/30'
-                        : 'h-56 bg-gradient-to-t from-black/55 via-black/20 to-transparent'
-                    }`}
-                  />
+                  {/* Tanpa lapisan gelap hitam atas-bawah agar media tampil jernih murni (hanya overlay tipis saat deskripsi diperluas/dibuka) */}
+                  {isExpanded && (
+                    <div
+                      className="absolute inset-0 pointer-events-none bg-black/40 transition-all duration-200"
+                    />
+                  )}
                 </div>
 
-                {/* Tombol Suara jika media berupa Video (muncul tepat di bawah bar hitam atas) */}
+                {/* TOMBOL SUARA (LOSPEKER) DI SUDUT KANAN ATAS MEDIA (JIKA MEDIA VIDEO) */}
                 {isCoverVideo && (
-                  <div className="absolute top-[72px] right-5 z-20">
+                  <div className="absolute top-[72px] right-3 sm:right-5 z-30 pointer-events-auto">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsFeedMuted((prev) => !prev);
                       }}
-                      className="min-h-[34px] px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title={isFeedMuted ? 'Suara Mati (Klik untuk Bunyikan)' : 'Suara Aktif (Klik untuk Bisukan)'}
+                      aria-label={isFeedMuted ? 'Suara Mati' : 'Suara Aktif'}
+                      className="w-9 h-9 rounded-full bg-black/55 hover:bg-black/80 active:scale-90 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20"
                     >
                       {isFeedMuted ? (
-                        <>
-                          <VolumeX className="w-3.5 h-3.5 text-white" />
-                          <span>Suara Mati</span>
-                        </>
+                        <VolumeX className="w-4 h-4 text-white" />
                       ) : (
-                        <>
-                          <Volume2 className="w-3.5 h-3.5 text-emerald-300" />
-                          <span>Suara Aktif</span>
-                        </>
+                        <Volume2 className="w-4 h-4 text-white" />
                       )}
                     </button>
                   </div>
                 )}
 
+                {/* DERETAN TOMBOL AKSI DI SISI KANAN MEDIA: LOVE, SHARE, & TITIK 3 (MORE) */}
+                <div
+                  style={{
+                    bottom: isCoverVideo ? '44px' : '28px'
+                  }}
+                  className="absolute right-3 sm:right-5 z-30 flex flex-col items-center gap-3.5 pointer-events-auto select-none"
+                >
+                  {/* 1. Tombol Love (Suka) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLikeArticle(article.id);
+                    }}
+                    title={likedArticleIds[article.id] ? 'Batal Suka' : 'Suka'}
+                    aria-label={likedArticleIds[article.id] ? 'Batal Suka' : 'Suka'}
+                    className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/80 active:scale-85 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20 group"
+                  >
+                    <Heart
+                      className={`w-5 h-5 transition-transform duration-200 group-active:scale-125 ${
+                        likedArticleIds[article.id]
+                          ? 'text-rose-500 fill-rose-500'
+                          : 'text-white'
+                      }`}
+                    />
+                  </button>
+
+                  {/* 2. Tombol Share (Bagikan) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (navigator.clipboard) {
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}#${article.id}`
+                        );
+                      }
+                      showToast('Tautan berita disalin ke papan klip');
+                    }}
+                    title="Bagikan Kabar"
+                    aria-label="Bagikan Kabar"
+                    className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/80 active:scale-85 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20 group"
+                  >
+                    <Share2 className="w-5 h-5 text-white transition-transform duration-200 group-active:scale-125" />
+                  </button>
+
+                  {/* 3. Tombol Titik 3 (Opsi Lainnya) Tepat di Bawah Icon Share */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMoreMenuArticleId((prev) =>
+                          prev === article.id ? null : article.id
+                        );
+                      }}
+                      title="Menu opsi berita"
+                      aria-label="Menu opsi berita"
+                      className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/80 active:scale-85 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20 group"
+                    >
+                      <MoreHorizontal className="w-5 h-5 text-white transition-transform duration-200 group-active:scale-125" />
+                    </button>
+
+                    {/* Popup Menu Opsi saat tombol titik 3 diklik */}
+                    {moreMenuArticleId === article.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMoreMenuArticleId(null);
+                          }}
+                        />
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute bottom-12 right-0 z-50 w-48 bg-white/95 backdrop-blur-md text-stone-900 rounded-2xl shadow-2xl border border-stone-200 py-1.5 animate-fadeIn"
+                        >
+                          {/* Baca Selengkapnya */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoreMenuArticleId(null);
+                              openArticleDetail(article);
+                            }}
+                            className="w-full px-3.5 py-2 text-left text-xs font-semibold hover:bg-stone-100 flex items-center gap-2.5 transition-colors cursor-pointer"
+                          >
+                            <BookOpen className="w-4 h-4 text-[#006837]" />
+                            <span>Baca Lengkap</span>
+                          </button>
+
+                          {/* Simpan Berita */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              toggleSaveArticle(article.id);
+                              setMoreMenuArticleId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-left text-xs font-semibold hover:bg-stone-100 flex items-center gap-2.5 transition-colors cursor-pointer"
+                          >
+                            <Bookmark
+                              className={`w-4 h-4 ${
+                                isArticleSaved(article.id)
+                                  ? 'text-[#006837] fill-current'
+                                  : 'text-stone-600'
+                              }`}
+                            />
+                            <span>
+                              {isArticleSaved(article.id)
+                                ? 'Tersimpan'
+                                : 'Simpan Berita'}
+                            </span>
+                          </button>
+
+                          {/* Bagikan / Salin Tautan */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (navigator.clipboard) {
+                                navigator.clipboard.writeText(
+                                  `${window.location.origin}#${article.id}`
+                                );
+                              }
+                              showToast('Tautan berita disalin ke papan klip');
+                              setMoreMenuArticleId(null);
+                            }}
+                            className="w-full px-3.5 py-2 text-left text-xs font-semibold hover:bg-stone-100 flex items-center gap-2.5 transition-colors cursor-pointer"
+                          >
+                            <Share2 className="w-4 h-4 text-stone-600" />
+                            <span>Salin Tautan</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* 3 & 4. TEKS DI ATAS FOTO: Posisi di bawah seperti semula, tanpa bayangan teks (shadow) */}
                 <div
                   style={{
-                    bottom: isCoverVideo ? '42px' : '24px'
+                    bottom: isCoverVideo ? '44px' : '24px'
                   }}
                   className="absolute left-0 right-0 z-20 w-full px-4 sm:px-6 flex flex-col items-start pointer-events-none"
                 >
@@ -1142,25 +1300,32 @@ export const BerandaView: React.FC = () => {
                         );
                       }
                     }}
-                    className={`w-full pointer-events-auto ${
+                    className={`w-full pointer-events-auto pr-12 sm:pr-14 ${
                       isLongDescription ? 'cursor-pointer' : ''
                     }`}
                   >
-                    {/* Urutan Baru: Nama Pengguna (Hijau, tebal) · Waktu (di kanan pengguna) · Lokasi (Kuning, ketebalan normal tidak lebih tebal) */}
-                    <div className="w-full flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm tracking-wide drop-shadow-md">
-                      <span className="text-emerald-400 font-bold flex items-center gap-1 drop-shadow-sm">
-                        <span className="material-icons text-emerald-400" style={{ fontSize: '14px' }}>person</span>
-                        {article.authorName}
-                      </span>
-                      <span className="text-white/60" aria-hidden="true">·</span>
-                      <span className="text-stone-300 font-normal">
-                        {article.relativeTime}
-                      </span>
-                      <span className="text-white/60" aria-hidden="true">·</span>
-                      <span className="text-amber-300 font-normal flex items-center gap-1 drop-shadow-sm">
-                        <span className="material-icons text-amber-300" style={{ fontSize: '14px', opacity: 0.9 }}>location_on</span>
-                        {article.location}
-                      </span>
+                    {/* Speaker tombol jika media video: warna putih murni */}
+                    {/* Urutan Feed: Baris 1: Nama Pengguna (Hijau, tebal) · Waktu | Baris 2 (Di Bawah Nama Pengguna): Lokasi */}
+                    <div className="w-full flex flex-col gap-0.5 text-xs sm:text-sm tracking-wide">
+                      {/* Baris Atas: Nama Pengguna & Waktu */}
+                      <div className="flex items-center gap-x-2">
+                        <span className="text-[#00A859] font-bold flex items-center gap-1">
+                          <span className="material-icons text-[#00A859]" style={{ fontSize: '14px' }}>person</span>
+                          {article.authorName}
+                        </span>
+                        <span className="text-white/60" aria-hidden="true">·</span>
+                        <span className="text-stone-300 font-normal">
+                          {article.relativeTime}
+                        </span>
+                      </div>
+
+                      {/* Baris Bawah: Lokasi Tepat di Bawah Nama Pengguna */}
+                      <div className="flex items-center">
+                        <span className="text-[#EAA000] font-normal flex items-center gap-1">
+                          <span className="material-icons text-[#EAA000]" style={{ fontSize: '14px', opacity: 0.95 }}>location_on</span>
+                          {article.location}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Deskripsi Berita: Jika pendek tampil penuh, jika panjang terpotong 3 baris dan ketika diklik muncul semua & memudar halus di pinggir atas-bawah saat di-scroll seperti Reels */}
@@ -1195,7 +1360,7 @@ export const BerandaView: React.FC = () => {
 
                         {isLongDescription && (
                           <span className="inline-block mt-1 text-xs sm:text-sm font-semibold text-white/80">
-                            ... selengkapnya
+                            selengkapnya
                           </span>
                         )}
                       </div>
@@ -1263,7 +1428,7 @@ export const CariView: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari judul berita, lokasi (mis. Makassar, Toraja, Maros), atau nama penulis..."
-              className="w-full min-h-[46px] pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-emerald-700 focus:bg-white transition-colors"
+              className="w-full min-h-[46px] pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#006837] focus:bg-white transition-colors"
             />
             {searchQuery && (
               <button
@@ -1288,7 +1453,7 @@ export const CariView: React.FC = () => {
                   onClick={() => setSelectedRegion(region)}
                   className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     active
-                      ? 'bg-emerald-800 text-white'
+                      ? 'bg-[#006837] text-white'
                       : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                   }`}
                 >
@@ -1341,7 +1506,7 @@ export const CariView: React.FC = () => {
                   setSelectedRegion('Semua Daerah');
                   setSelectedCategory('Semua Topik');
                 }}
-                className="mt-3 min-h-[40px] px-4 py-2 rounded-lg text-xs font-semibold text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer"
+                className="mt-3 min-h-[40px] px-4 py-2 rounded-lg text-xs font-semibold text-[#006837] hover:bg-[#006837]/10 transition-colors cursor-pointer"
               >
                 Atur Ulang Filter
               </button>
@@ -1365,24 +1530,24 @@ export const CariView: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
                         {isVid && (
                           <>
-                            <span className="font-semibold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px]">Video</span>
+                            <span className="font-semibold text-[#006837] bg-[#006837]/10 px-1.5 py-0.5 rounded text-[10px]">Video</span>
                             <span aria-hidden="true" className="text-stone-300">·</span>
                           </>
                         )}
-                        <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                          <span className="material-icons text-emerald-700" style={{ fontSize: '13px' }}>person</span>
+                        <span className="text-[#006837] font-bold flex items-center gap-0.5">
+                          <span className="material-icons text-[#006837]" style={{ fontSize: '13px' }}>person</span>
                           {article.authorName}
                         </span>
                         <span aria-hidden="true" className="text-stone-300">·</span>
                         <span className="text-stone-500 font-normal">{article.relativeTime}</span>
                         <span aria-hidden="true" className="text-stone-300">·</span>
-                        <span className="text-amber-600 font-normal flex items-center gap-0.5">
-                          <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                        <span className="text-[#EAA000] font-normal flex items-center gap-0.5">
+                          <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                           {article.location}
                         </span>
                       </div>
 
-                      <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-stone-900 group-hover:text-emerald-800 transition-colors mt-1.5 leading-snug line-clamp-3">
+                      <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-stone-900 group-hover:text-[#006837] transition-colors mt-1.5 leading-snug line-clamp-3">
                         {article.summary}
                       </h2>
                     </div>
@@ -1510,7 +1675,7 @@ const VideoCoverPickerModal: React.FC<VideoCoverPickerModalProps> = ({
         <button
           type="button"
           onClick={handleApply}
-          className="bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow transition-colors cursor-pointer"
+          className="bg-[#006837] hover:bg-[#00542c] text-white font-bold text-sm px-4 py-1.5 rounded-full shadow transition-colors cursor-pointer"
         >
           Selesai
         </button>
@@ -1554,7 +1719,7 @@ const VideoCoverPickerModal: React.FC<VideoCoverPickerModalProps> = ({
 
           {isLoadingFrame && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#006837] border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -1570,7 +1735,7 @@ const VideoCoverPickerModal: React.FC<VideoCoverPickerModalProps> = ({
       <div className="p-4 bg-stone-950 border-t border-stone-800 flex flex-col gap-3">
         <div className="flex items-center justify-between text-xs text-stone-400 px-1">
           <span className="flex items-center gap-1 font-medium">
-            <span className="material-icons text-sm text-sky-400">touch_app</span>
+            <span className="material-icons text-sm text-[#00A859]">touch_app</span>
             Geser timeline untuk memilih thumbnail video
           </span>
           <span className="font-mono text-stone-300 font-semibold">
@@ -1587,7 +1752,7 @@ const VideoCoverPickerModal: React.FC<VideoCoverPickerModalProps> = ({
             step={0.05}
             value={currentTime}
             onChange={(e) => handleSeek(parseFloat(e.target.value))}
-            className="w-full h-2.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+            className="w-full h-2.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-[#006837]"
           />
         </div>
 
@@ -1663,7 +1828,7 @@ export const BuatKabarView: React.FC = () => {
   );
   const [showCoverPicker, setShowCoverPicker] = useState<boolean>(false);
   const [desc, setDesc] = useState('');
-  const [loc, setLoc] = useState(user.homeLocation ? user.homeLocation.slice(0, 25) : '');
+  const [loc, setLoc] = useState('');
   const [isUploadingImageKit, setIsUploadingImageKit] = useState<boolean>(false);
   const [localUploadPercent, setLocalUploadPercent] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -1757,9 +1922,13 @@ export const BuatKabarView: React.FC = () => {
     e.target.value = '';
   };
 
-  const isDescValid = desc.trim().length > 0;
-  // Posting aktif jika deskripsi diisi dan ada media
-  const isReadyToShare = isDescValid && media !== null;
+  const isMediaValid = media !== null;
+  const isLocValid = loc.trim().length > 0;
+  const isDescValid = desc.trim().length >= 99;
+
+  // Tombol HANYA berubah warna & aktif jika ketiganya sudah diisi: media, deskripsi, dan lokasi.
+  // Walaupun ketiganya sudah terisi, tombol TETAP BELUM berubah sebelum deskripsi melewati batas minimal 99 huruf.
+  const isReadyToShare = isMediaValid && isLocValid && isDescValid;
 
   const handleShare = async () => {
     if (!isReadyToShare || isSubmitting) return;
@@ -1795,7 +1964,7 @@ export const BuatKabarView: React.FC = () => {
       setDesc('');
       setVideoThumb(null);
       setShowCoverPicker(false);
-      setLoc(user.homeLocation ? user.homeLocation.slice(0, 25) : '');
+      setLoc('');
       setLocalUploadPercent(0);
       setPendingMedia(null);
       setIsMediaLoading(false);
@@ -1934,7 +2103,7 @@ export const BuatKabarView: React.FC = () => {
             >
               {isMediaLoading ? (
                 <div className="relative w-full h-full bg-stone-900 flex flex-col items-center justify-center p-2 text-center text-white">
-                  <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-1.5" />
+                  <div className="w-5 h-5 border-2 border-[#006837] border-t-transparent rounded-full animate-spin mb-1.5" />
                   <span className="text-[10px] text-stone-300 font-medium leading-tight">Memuat...</span>
                 </div>
               ) : media ? (
@@ -1951,7 +2120,7 @@ export const BuatKabarView: React.FC = () => {
                     ) : (
                       /* Fallback tampilan thumbnail saat memproses frame */
                       <div className="relative w-full h-full bg-stone-900 flex flex-col items-center justify-center p-2 text-center text-white">
-                        <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-1.5" />
+                        <div className="w-5 h-5 border-2 border-[#006837] border-t-transparent rounded-full animate-spin mb-1.5" />
                         <span className="text-[9px] text-stone-300 font-semibold leading-tight">
                           Memproses...
                         </span>
@@ -2008,17 +2177,8 @@ export const BuatKabarView: React.FC = () => {
               <div className="flex flex-col items-center mt-1.5 gap-1 w-full">
                 <button
                   type="button"
-                  onClick={() => setShowCoverPicker(true)}
-                  className="w-full text-[10px] font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-2 py-1 rounded-md border border-sky-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                  title="Pilih frame cuplikan terbaik untuk thumbnail"
-                >
-                  <span className="material-icons" style={{ fontSize: '12px' }}>tune</span>
-                  Pilih Frame
-                </button>
-                <button
-                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-[9px] text-stone-500 hover:text-stone-800 hover:underline cursor-pointer"
+                  className="text-[10px] text-stone-500 hover:text-stone-800 hover:underline cursor-pointer"
                 >
                   Ganti Video
                 </button>
@@ -2053,7 +2213,17 @@ export const BuatKabarView: React.FC = () => {
                 marginTop: '4px'
               }}
             >
-              <span id="sDesc" />
+              <span id="sDesc" className="text-xs font-medium">
+                {desc.trim().length < 99 ? (
+                  <span className="text-stone-400">
+                    {desc.trim().length}/99 karakter
+                  </span>
+                ) : (
+                  <span className="text-[#006837] font-semibold">
+                    ✓ 99+ karakter terpenuhi
+                  </span>
+                )}
+              </span>
               <span id="cDesc">{desc.length}/1000</span>
             </div>
           </div>
@@ -2064,7 +2234,7 @@ export const BuatKabarView: React.FC = () => {
           <div className="flex items-center justify-between w-full">
             <label htmlFor="loc" className="flex items-center gap-1.5 text-xs font-bold text-stone-700 select-none">
               <span
-                className="material-icons text-sky-600"
+                className="material-icons text-[#EAA000]"
                 style={{ fontSize: '18px', verticalAlign: 'middle' }}
               >
                 location_on
@@ -2074,14 +2244,14 @@ export const BuatKabarView: React.FC = () => {
             <span
               id="cLoc"
               className={`text-xs font-semibold ${
-                loc.length === 25 ? 'text-amber-600' : 'text-stone-400'
+                loc.length === 25 ? 'text-[#EAA000]' : 'text-stone-400'
               }`}
             >
               {loc.length}/25
             </span>
           </div>
 
-          <div className="w-full bg-stone-100/90 border border-stone-200 focus-within:border-sky-500 focus-within:bg-white rounded-xl px-3.5 py-2.5 flex items-center transition-all mt-1">
+          <div className="w-full bg-stone-100/90 border border-stone-200 focus-within:border-[#006837] focus-within:bg-white rounded-xl px-3.5 py-2.5 flex items-center transition-all mt-1">
             <input
               id="loc"
               type="text"
@@ -2114,7 +2284,7 @@ export const BuatKabarView: React.FC = () => {
           disabled={!isReadyToShare || isSubmitting}
           className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all select-none shadow-sm ${
             isReadyToShare && !isSubmitting
-              ? 'bg-sky-500 hover:bg-sky-600 active:scale-[0.99] text-white cursor-pointer shadow-sky-100'
+              ? 'bg-[#006837] hover:bg-[#00542c] active:scale-[0.99] text-white cursor-pointer shadow-md'
               : 'bg-stone-200 text-stone-400 cursor-not-allowed'
           }`}
         >
@@ -2132,10 +2302,12 @@ export const BuatKabarView: React.FC = () => {
         </button>
         {!isReadyToShare && (
           <p className="text-[11px] text-stone-400 text-center mt-2 font-medium select-none">
-            {!media
+            {!isMediaValid
               ? 'Pilih foto atau video berita terlebih dahulu'
+              : !isLocValid
+              ? 'Isi lokasi berita terlebih dahulu'
               : !isDescValid
-              ? 'Tuliskan ringkasan kabar atau liputan berita Anda'
+              ? `Deskripsi minimal 99 huruf (kurang ${Math.max(0, 99 - desc.trim().length)} huruf lagi agar tombol berubah warna & aktif)`
               : ''}
           </p>
         )}
@@ -2190,7 +2362,7 @@ export const TersimpanView: React.FC = () => {
               Arsip bacaan pilihan Anda untuk dibaca kembali kapan saja.
             </p>
           </div>
-          <span className="text-xs font-semibold text-emerald-800 tabular-nums">
+          <span className="text-xs font-semibold text-[#006837] tabular-nums">
             {savedArticles.length} berita
           </span>
         </header>
@@ -2207,7 +2379,7 @@ export const TersimpanView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('beranda')}
-              className="mt-5 min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-800 text-white text-xs font-semibold hover:bg-emerald-900 transition-colors cursor-pointer"
+              className="mt-5 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#006837] text-white text-xs font-semibold hover:bg-[#00542c] transition-colors cursor-pointer"
             >
               Jelajahi Beranda Majalah
             </button>
@@ -2224,20 +2396,20 @@ export const TersimpanView: React.FC = () => {
                   className="flex-1 min-w-0 cursor-pointer group"
                 >
                   <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                    <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                      <span className="material-icons text-emerald-700" style={{ fontSize: '13px' }}>person</span>
+                    <span className="text-[#006837] font-bold flex items-center gap-0.5">
+                      <span className="material-icons text-[#006837]" style={{ fontSize: '13px' }}>person</span>
                       {article.authorName}
                     </span>
                     <span aria-hidden="true" className="text-stone-300">·</span>
                     <span className="text-stone-500 font-normal">{article.formattedDate}</span>
                     <span aria-hidden="true" className="text-stone-300">·</span>
-                    <span className="text-amber-600 font-normal flex items-center gap-0.5">
-                      <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                    <span className="text-[#EAA000] font-normal flex items-center gap-0.5">
+                      <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                       {article.location}
                     </span>
                   </div>
 
-                  <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-stone-900 group-hover:text-emerald-800 transition-colors mt-1.5 leading-snug line-clamp-3">
+                  <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-stone-900 group-hover:text-[#006837] transition-colors mt-1.5 leading-snug line-clamp-3">
                     {article.summary}
                   </h2>
                 </div>
@@ -2246,7 +2418,7 @@ export const TersimpanView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => openArticleDetail(article)}
-                    className="min-h-[40px] px-3.5 py-2 rounded-lg bg-emerald-800 text-white text-xs font-semibold hover:bg-emerald-900 inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                    className="min-h-[40px] px-3.5 py-2 rounded-lg bg-[#006837] text-white text-xs font-semibold hover:bg-[#00542c] inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
                   >
                     <span>Baca Lengkap</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -2316,22 +2488,22 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
           {user.isSignedIn ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-800 text-white font-editorial text-2xl font-semibold flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 rounded-full bg-[#006837] text-white font-editorial text-2xl font-semibold flex items-center justify-center shrink-0">
                   {user.displayName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-800">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#006837]">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Terhubung dengan Google Sign-In</span>
                   </div>
-                  <h1 className="font-editorial text-2xl font-bold text-emerald-700 mt-0.5">
+                  <h1 className="font-editorial text-2xl font-bold text-[#006837] mt-0.5">
                     {user.displayName}
                   </h1>
                   <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5">
                     <span>{user.email}</span>
                     <span aria-hidden="true">·</span>
-                    <span className="text-amber-600 font-semibold flex items-center gap-0.5">
-                      <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                    <span className="text-[#EAA000] font-semibold flex items-center gap-0.5">
+                      <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                       {user.homeLocation}
                     </span>
                   </p>
@@ -2371,7 +2543,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
               <button
                 type="button"
                 onClick={() => signInWithGoogle()}
-                className="mt-5 min-h-[46px] px-6 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-sm font-semibold inline-flex items-center gap-2.5 shadow-sm transition-colors cursor-pointer"
+                className="mt-5 min-h-[46px] px-6 py-2.5 rounded-xl bg-[#006837] hover:bg-[#00542c] text-white text-sm font-semibold inline-flex items-center gap-2.5 shadow-sm transition-colors cursor-pointer"
               >
                 <span>Masuk dengan Google (puasa2768@gmail.com)</span>
               </button>
@@ -2405,7 +2577,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
               <div className="sm:col-span-2 flex justify-end">
                 <button
                   type="submit"
-                  className="min-h-[40px] px-4 py-2 rounded-lg bg-emerald-800 text-white text-xs font-semibold hover:bg-emerald-900 cursor-pointer"
+                  className="min-h-[40px] px-4 py-2 rounded-lg bg-[#006837] text-white text-xs font-semibold hover:bg-[#00542c] cursor-pointer"
                 >
                   Simpan Perubahan
                 </button>
@@ -2424,7 +2596,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
           </div>
           <div className="p-4 rounded-xl border border-stone-200">
             <div className="text-xs text-stone-500">Karya Anda</div>
-            <div className="font-editorial text-2xl sm:text-3xl font-semibold text-emerald-800 mt-1 tabular-nums">
+            <div className="font-editorial text-2xl sm:text-3xl font-semibold text-[#006837] mt-1 tabular-nums">
               {authoredArticles.length}
             </div>
           </div>
@@ -2440,7 +2612,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
         <section className="p-6 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#EAA000]/10 text-[#EAA000] flex items-center justify-center shrink-0">
                 <Cloud className="w-5 h-5" />
               </div>
               <div>
@@ -2448,8 +2620,8 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
                   <h2 className="font-editorial text-lg font-semibold text-stone-900">
                     Firebase Cloud Database Pribadi
                   </h2>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#006837]/10 text-[#006837]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#006837] animate-pulse"></span>
                     {firebaseStatus === 'connected' ? 'Terhubung (Aktif)' : 'Menghubungkan...'}
                   </span>
                 </div>
@@ -2463,7 +2635,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
             <div className="p-3 bg-white rounded-xl border border-stone-200">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <Database className="w-3.5 h-3.5 text-emerald-700" />
+                <Database className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Cloud Firestore</span>
               </div>
               <div className="font-semibold text-stone-800">Koleksi: articles, users</div>
@@ -2472,7 +2644,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
 
             <div className="p-3 bg-white rounded-xl border border-stone-200">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Autentikasi</span>
               </div>
               <div className="font-semibold text-stone-800">Firebase Auth + Google</div>
@@ -2481,7 +2653,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
 
             <div className="p-3 bg-white rounded-xl border border-stone-200">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <Cloud className="w-3.5 h-3.5 text-emerald-700" />
+                <Cloud className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Cloud Storage</span>
               </div>
               <div className="font-semibold text-stone-800">kareba-ta-728d0.firebasestorage.app</div>
@@ -2491,10 +2663,10 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
         </section>
 
         {/* Status Integrasi ImageKit.io Media CDN Pribadi */}
-        <section className="p-6 rounded-2xl border border-sky-200 bg-sky-50/60 space-y-4">
+        <section className="p-6 rounded-2xl border border-[#006837]/25 bg-[#006837]/5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#006837]/10 text-[#006837] flex items-center justify-center shrink-0">
                 <UploadCloud className="w-5 h-5" />
               </div>
               <div>
@@ -2502,8 +2674,8 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
                   <h2 className="font-editorial text-lg font-semibold text-stone-900">
                     ImageKit.io Media CDN Pribadi
                   </h2>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#006837]/10 text-[#006837]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#006837] animate-pulse"></span>
                     {imagekitStatus === 'uploading' ? 'Mengunggah...' : 'Terhubung (Aktif)'}
                   </span>
                 </div>
@@ -2515,27 +2687,27 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-            <div className="p-3 bg-white rounded-xl border border-sky-100 shadow-xs">
+            <div className="p-3 bg-white rounded-xl border border-[#006837]/15 shadow-xs">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <Video className="w-3.5 h-3.5 text-sky-600" />
+                <Video className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Video Berita Warga</span>
               </div>
               <div className="font-semibold text-stone-800">Folder: /karebata/videos</div>
               <div className="text-[11px] text-stone-400 mt-0.5">Streaming H.264 & Auto-Thumbnails</div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-sky-100 shadow-xs">
+            <div className="p-3 bg-white rounded-xl border border-[#006837]/15 shadow-xs">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <ImagePlus className="w-3.5 h-3.5 text-sky-600" />
+                <ImagePlus className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Foto & Sampul Liputan</span>
               </div>
               <div className="font-semibold text-stone-800">Folder: /karebata/photos</div>
               <div className="text-[11px] text-stone-400 mt-0.5">Auto WebP, AVIF & Rasio Asli</div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-sky-100 shadow-xs">
+            <div className="p-3 bg-white rounded-xl border border-[#006837]/15 shadow-xs">
               <div className="text-stone-500 flex items-center gap-1.5 font-medium mb-1">
-                <FolderCheck className="w-3.5 h-3.5 text-sky-600" />
+                <FolderCheck className="w-3.5 h-3.5 text-[#006837]" />
                 <span>Kredensial & Autentikasi</span>
               </div>
               <div className="font-semibold text-stone-800 font-mono text-[11px] truncate">
@@ -2549,7 +2721,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
         </section>
 
         {/* Akses Kode Sumber Flutter Android */}
-        <section className="p-6 rounded-2xl border border-emerald-800/25 bg-emerald-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <section className="p-6 rounded-2xl border border-[#006837]/25 bg-[#006837]/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="font-editorial text-xl font-semibold text-stone-900">
               Kode Sumber Flutter Android (Material 3 + Provider + Firebase)
@@ -2561,7 +2733,7 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
           <button
             type="button"
             onClick={onOpenFlutterCode}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold inline-flex items-center gap-2 shrink-0 transition-colors cursor-pointer whitespace-nowrap"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#006837] hover:bg-[#00542c] text-white text-xs font-semibold inline-flex items-center gap-2 shrink-0 transition-colors cursor-pointer whitespace-nowrap"
           >
             <Code2 className="w-4 h-4" />
             <span>Buka Kode Flutter</span>
@@ -2587,18 +2759,18 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
                 >
                   <div>
                     <div className="text-xs font-medium flex items-center gap-1.5">
-                      <span className="text-amber-600 font-normal flex items-center gap-0.5">
-                        <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                      <span className="text-[#EAA000] font-normal flex items-center gap-0.5">
+                        <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                         {article.location}
                       </span>
                       <span aria-hidden="true" className="text-stone-300">·</span>
                       <span className="text-stone-500">{article.formattedDate}</span>
                     </div>
-                    <h3 className="font-editorial text-lg sm:text-xl font-semibold text-stone-900 group-hover:text-emerald-800 transition-colors mt-1 line-clamp-2">
+                    <h3 className="font-editorial text-lg sm:text-xl font-semibold text-stone-900 group-hover:text-[#006837] transition-colors mt-1 line-clamp-2">
                       {article.summary}
                     </h3>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-stone-400 group-hover:text-emerald-800 shrink-0" />
+                  <ArrowUpRight className="w-4 h-4 text-stone-400 group-hover:text-[#006837] shrink-0" />
                 </div>
               ))}
             </div>

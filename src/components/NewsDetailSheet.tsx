@@ -85,7 +85,7 @@ export const NewsDetailSheet: React.FC = () => {
               onClick={() => toggleSaveArticle(selectedArticle.id)}
               className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
                 saved
-                  ? 'bg-emerald-800 text-white'
+                  ? 'bg-[#006837] text-white hover:bg-[#00542c]'
                   : 'bg-stone-100 text-stone-800 hover:bg-stone-200'
               }`}
             >
@@ -101,7 +101,7 @@ export const NewsDetailSheet: React.FC = () => {
             >
               {copiedShare ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-700" />
+                  <Check className="w-4 h-4 text-[#006837]" />
                   <span>Tersalin</span>
                 </>
               ) : (
@@ -164,7 +164,7 @@ export const NewsDetailSheet: React.FC = () => {
             <div className="px-5 sm:px-8 py-3.5 bg-stone-50 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-xs font-editorial italic text-stone-600 leading-relaxed">
                 {currentIsVideo && (
-                  <span className="not-italic font-sans font-semibold text-emerald-800 mr-2">
+                  <span className="not-italic font-sans font-semibold text-[#006837] mr-2">
                     [Video Liputan{currentPhoto?.durationLabel ? ` · ${currentPhoto.durationLabel}` : ''}]
                   </span>
                 )}
@@ -181,7 +181,7 @@ export const NewsDetailSheet: React.FC = () => {
                       onClick={() => setActivePhotoIndex(idx)}
                       className={`w-12 h-9 rounded overflow-hidden border-2 transition-all cursor-pointer ${
                         idx === activePhotoIndex
-                          ? 'border-emerald-700 opacity-100 scale-105'
+                          ? 'border-[#006837] opacity-100 scale-105'
                           : 'border-transparent opacity-60 hover:opacity-95'
                       }`}
                     >
@@ -205,8 +205,8 @@ export const NewsDetailSheet: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide">
               <span className="text-stone-600">{selectedArticle.category}</span>
               <span aria-hidden="true" className="text-stone-300">·</span>
-              <span className="text-amber-600 font-normal flex items-center gap-0.5">
-                <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+              <span className="text-[#EAA000] font-normal flex items-center gap-0.5">
+                <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                 {selectedArticle.location}
               </span>
               <span aria-hidden="true" className="text-stone-300">·</span>
@@ -224,8 +224,8 @@ export const NewsDetailSheet: React.FC = () => {
             {/* Penulis (Hijau) & Tanggal Lengkap */}
             <div className="mt-6 pt-5 pb-5 border-y border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-stone-500">
               <div>
-                <span className="text-emerald-700 font-bold flex items-center gap-1 inline-flex">
-                  <span className="material-icons text-emerald-700" style={{ fontSize: '14px' }}>person</span>
+                <span className="text-[#006837] font-bold flex items-center gap-1 inline-flex">
+                  <span className="material-icons text-[#006837]" style={{ fontSize: '14px' }}>person</span>
                   {selectedArticle.authorName}
                 </span>
                 <span className="mx-1.5 text-stone-300" aria-hidden="true">·</span>
@@ -241,7 +241,7 @@ export const NewsDetailSheet: React.FC = () => {
                   <p
                     className={
                       index === 0
-                        ? 'first-letter:float-left first-letter:font-editorial first-letter:text-5xl first-letter:font-semibold first-letter:pr-3 first-letter:leading-none first-letter:text-emerald-900'
+                        ? 'first-letter:float-left first-letter:font-editorial first-letter:text-5xl first-letter:font-semibold first-letter:pr-3 first-letter:leading-none first-letter:text-[#006837]'
                         : ''
                     }
                   >
@@ -249,7 +249,7 @@ export const NewsDetailSheet: React.FC = () => {
                   </p>
 
                   {index === 1 && selectedArticle.pullQuote && (
-                    <blockquote className="my-8 pl-5 border-l-2 border-emerald-800 py-1">
+                    <blockquote className="my-8 pl-5 border-l-2 border-[#006837] py-1">
                       <p className="font-editorial italic text-xl sm:text-2xl text-stone-900 leading-snug">
                         “{selectedArticle.pullQuote}”
                       </p>
@@ -287,7 +287,7 @@ export const NewsDetailSheet: React.FC = () => {
                           />
                           {isVid && (
                             <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/75 text-white text-[11px] font-medium inline-flex items-center gap-1">
-                              <Film className="w-3 h-3 text-emerald-400" />
+                              <Film className="w-3 h-3 text-[#00A859]" />
                               <span>Video{photo.durationLabel ? ` · ${photo.durationLabel}` : ''}</span>
                             </div>
                           )}
@@ -306,8 +306,8 @@ export const NewsDetailSheet: React.FC = () => {
             <div className="mt-10 pt-6 border-t border-stone-200 flex flex-wrap items-center justify-between gap-4">
               <div className="text-xs text-stone-500 flex items-center gap-1">
                 <span>Diterbitkan di <span className="font-semibold text-stone-800">Kareba&apos;Ta</span> ·</span>
-                <span className="text-amber-600 font-normal flex items-center gap-0.5">
-                  <span className="material-icons text-amber-600" style={{ fontSize: '13px' }}>location_on</span>
+                <span className="text-[#EAA000] font-normal flex items-center gap-0.5">
+                  <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
                   {selectedArticle.location}
                 </span>
               </div>
@@ -317,7 +317,7 @@ export const NewsDetailSheet: React.FC = () => {
                   onClick={() => toggleSaveArticle(selectedArticle.id)}
                   className={`min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer ${
                     saved
-                      ? 'bg-emerald-800 text-white'
+                      ? 'bg-[#006837] text-white hover:bg-[#00542c]'
                       : 'border border-stone-300 text-stone-800 hover:bg-stone-100'
                   }`}
                 >
@@ -327,7 +327,7 @@ export const NewsDetailSheet: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-800 text-white hover:bg-emerald-900 inline-flex items-center gap-2 transition-colors cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold bg-[#006837] text-white hover:bg-[#00542c] inline-flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Share2 className="w-4 h-4" />
                   <span>Bagikan Kabar</span>

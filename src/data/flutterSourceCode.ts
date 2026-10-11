@@ -608,39 +608,49 @@ class _MagazineFullPageCardState extends State<MagazineFullPageCard> {
                 ),
                 const Spacer(),
 
-                // Metadata: Lokasi (Kuning) · Waktu Unggah · Nama Penulis (Hijau)
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 12, letterSpacing: 0.3),
-                    children: [
-                      TextSpan(
-                        text: '\${article.authorName}',
-                        style: const TextStyle(
-                          color: Color(0xFF4ADE80), // Hijau Penulis/Pengguna
-                          fontWeight: FontWeight.bold,
+                // Metadata Feed: Baris 1: Nama Penulis (Hijau) · Waktu | Baris 2: Lokasi (Kuning) tepat di bawah nama
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 12, letterSpacing: 0.3),
+                        children: [
+                          TextSpan(
+                            text: '\${article.authorName}',
+                            style: const TextStyle(
+                              color: Color(0xFF4ADE80), // Hijau Penulis/Pengguna
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const TextSpan(
+                            text: '  ·  ',
+                            style: TextStyle(color: Color(0xFFD6D3D1)),
+                          ),
+                          TextSpan(
+                            text: '\$timeStr',
+                            style: const TextStyle(color: Color(0xFFD6D3D1)), // Waktu
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.location_on, size: 14, color: Color(0xFFFACC15)),
+                        const SizedBox(width: 3),
+                        Text(
+                          '\${article.location}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFFACC15), // Kuning Lokasi tepat di bawah nama pengguna
+                            fontWeight: FontWeight.normal,
+                          ),
                         ),
-                      ),
-                      const TextSpan(
-                        text: '  ·  ',
-                        style: TextStyle(color: Color(0xFFD6D3D1)),
-                      ),
-                      TextSpan(
-                        text: '\$timeStr',
-                        style: const TextStyle(color: Color(0xFFD6D3D1)), // Waktu di kanan nama pengguna
-                      ),
-                      const TextSpan(
-                        text: '  ·  ',
-                        style: TextStyle(color: Color(0xFFD6D3D1)),
-                      ),
-                      TextSpan(
-                        text: article.location,
-                        style: const TextStyle(
-                          color: Color(0xFFFACC15), // Kuning Lokasi (ringan, tidak lebih tebal dari nama pengguna)
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
 

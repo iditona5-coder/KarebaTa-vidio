@@ -87,7 +87,7 @@ const KarebataShell: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('beranda')}
-                className="inline-flex items-center gap-2 text-stone-900 hover:text-emerald-700 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 text-stone-900 hover:text-[#006837] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-6 h-6 text-stone-800 shrink-0" strokeWidth={2.2} />
                 <KarebataBrandLogo pinSize={32} showTagline={true} theme="light" />
@@ -100,7 +100,7 @@ const KarebataShell: React.FC = () => {
                   aria-label="Cari Berita"
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'cari'
-                      ? 'text-emerald-700'
+                      ? 'text-[#006837]'
                       : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >
@@ -120,7 +120,7 @@ const KarebataShell: React.FC = () => {
                   aria-label="Akun & Profil"
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'akun' || activeTab === 'tersimpan'
-                      ? 'text-emerald-700'
+                      ? 'text-[#006837]'
                       : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >
