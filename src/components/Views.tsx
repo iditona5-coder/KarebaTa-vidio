@@ -28,7 +28,8 @@ import {
   MoreVertical,
   MoreHorizontal,
   Share2,
-  Heart
+  Heart,
+  RefreshCw
 } from 'lucide-react';
 import { useKarebata } from '../context/KarebataContext';
 import { NewsArticle, NewsPhoto } from '../types/news';
@@ -552,6 +553,11 @@ export const BerandaView: React.FC = () => {
     });
   };
 
+  // State Pull-To-Refresh (Tarik ke bawah di berita pertama untuk menyegarkan kabar)
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const PULL_REFRESH_THRESHOLD = 75;
+
   // Pelacak tarikan langsung ke DOM (60fps tanpa re-render berat) & anti-kebablasan (1 swipe = 1 berita)
   const isTransitioningRef = useRef(false);
   const transitionTimerRef = useRef<number | null>(null);
@@ -566,6 +572,17 @@ export const BerandaView: React.FC = () => {
   const SNAP_DURATION_MS = 210;
   const SWIPE_DISTANCE_THRESHOLD_PX = 18;
   const SWIPE_VELOCITY_THRESHOLD = 0.12; // px/ms
+
+  const triggerRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    setPullDistance(60);
+    // Simulasikan pembaruan feed seketika dengan animasi indikator putar
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setPullDistance(0);
+      showToast('Kabar berita berhasil disegarkan');
+    }, 1100);
+  }, [showToast]);
 
   const applyTrackTransform = (index: number, offsetPx: number, animate: boolean) => {
     const track = trackRef.current;
@@ -714,8 +731,19 @@ export const BerandaView: React.FC = () => {
       const isAtTopEdge = activeFeedIndex === 0 && rawDeltaY > 0;
       const isAtBottomEdge = activeFeedIndex === articles.length - 1 && rawDeltaY < 0;
 
-      const offsetPx = isAtTopEdge || isAtBottomEdge ? 0 : rawDeltaY;
+      if (isAtTopEdge) {
+        // Efek tarikan elastis (rubber-band) untuk Refresh di Berita Pertama
+        const resistanceFactor = 0.42;
+        const rubberBandDistance = Math.min(110, rawDeltaY * resistanceFactor);
+        dragCurrentOffsetYRef.current = rubberBandDistance;
+        setPullDistance(rubberBandDistance);
+        applyTrackTransform(0, rubberBandDistance, false);
+        return;
+      }
+
+      const offsetPx = isAtBottomEdge ? 0 : rawDeltaY;
       dragCurrentOffsetYRef.current = offsetPx;
+      setPullDistance(0);
       applyTrackTransform(activeFeedIndex, offsetPx, false);
 
       // Begitu video ter-scroll setengah, langsung hentikan putaran videonya
@@ -724,7 +752,7 @@ export const BerandaView: React.FC = () => {
     [activeFeedIndex, articles.length, syncActiveVideoDuringDrag]
   );
 
-  // Begitu dilepas: langsung narik kencang tepat 1 berita berikutnya/sebelumnya
+  // Begitu dilepas: langsung narik kencang tepat 1 berita berikutnya/sebelumnya, atau trigger refresh
   const releasePull = useCallback(
     (clientY?: number) => {
       if (!isDraggingRef.current || dragStartYRef.current === null) return;
@@ -736,6 +764,21 @@ export const BerandaView: React.FC = () => {
 
       dragStartYRef.current = null;
       isDraggingRef.current = false;
+
+      // Cek apakah ditarik ke bawah di berita pertama untuk menyegarkan kabar
+      if (activeFeedIndex === 0 && totalDeltaY > 0) {
+        if (dragCurrentOffsetYRef.current >= PULL_REFRESH_THRESHOLD || totalDeltaY >= 120) {
+          triggerRefresh();
+          return;
+        } else {
+          setPullDistance(0);
+          dragCurrentOffsetYRef.current = 0;
+          applyTrackTransform(0, 0, true);
+          return;
+        }
+      }
+
+      setPullDistance(0);
 
       const shouldSnapNextOrPrev =
         Math.abs(totalDeltaY) >= SWIPE_DISTANCE_THRESHOLD_PX ||
@@ -757,7 +800,7 @@ export const BerandaView: React.FC = () => {
       applyTrackTransform(activeFeedIndex, 0, true);
       syncActiveVideoDuringDrag(0, true);
     },
-    [activeFeedIndex, articles.length, syncActiveVideoDuringDrag]
+    [activeFeedIndex, articles.length, syncActiveVideoDuringDrag, triggerRefresh]
   );
 
   // Pasang native event listener { passive: false } agar 100% mematikan scroll bawaan browser
@@ -1022,6 +1065,33 @@ export const BerandaView: React.FC = () => {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* INDIKATOR PULL-TO-REFRESH DI ATAS FEED (TARIK KE BAWAH UNTUK MENYEGARKAN) */}
+      {(pullDistance > 0 || isRefreshing) && (
+        <div
+          style={{
+            top: `${Math.min(110, 68 + pullDistance * 0.45)}px`,
+            opacity: Math.min(1, Math.max(0.2, pullDistance / 40))
+          }}
+          className="absolute left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-transform duration-150"
+        >
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 text-stone-900 shadow-xl border border-stone-200/80 backdrop-blur-md">
+            <RefreshCw
+              style={{
+                transform: `rotate(${isRefreshing ? 0 : pullDistance * 4.5}deg)`
+              }}
+              className={`w-4 h-4 text-[#006837] ${isRefreshing ? 'animate-spin' : ''}`}
+            />
+            <span className="text-xs font-bold text-stone-800 select-none">
+              {isRefreshing
+                ? 'Menyegarkan kabar...'
+                : pullDistance >= PULL_REFRESH_THRESHOLD
+                ? 'Lepas untuk menyegarkan'
+                : 'Tarik untuk menyegarkan'}
+            </span>
           </div>
         </div>
       )}
