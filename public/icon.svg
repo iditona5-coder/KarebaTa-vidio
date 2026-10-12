@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="104" fill="#006837"/>
+  <g transform="translate(136, 68) scale(2.4)">
+    <!-- Pin Lokasi Kuning Emas Logo (#EAA000) -->
+    <path d="M 50 6 C 72.5 6 90 23.5 90 46 C 90 68 76 94 52 126 C 51.1 127.2 48.9 127.2 48 126 C 24 94 10 68 10 46 C 10 23.5 27.5 6 50 6 Z" fill="#EAA000" />
+    <!-- Huruf K Putih di Tengah Pin -->
+    <text x="50" y="52" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="46">K</text>
+  </g>
+  <text x="256" y="445" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="44" letter-spacing="1">Kareba'Ta</text>
+</svg>

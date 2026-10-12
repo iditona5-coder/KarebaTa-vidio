@@ -34,6 +34,7 @@ import { useKarebata } from '../context/KarebataContext';
 import { NewsArticle, NewsPhoto } from '../types/news';
 import { SmartImage, isVideoSource } from './SmartImage';
 import { KarebataBrandLogo } from './KarebataBrandLogo';
+import { PWAInstallPrompt } from './PWAInstallPrompt';
 
 const formatDurationSeconds = (seconds: number): string => {
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
@@ -2229,7 +2230,7 @@ export const BuatKabarView: React.FC = () => {
           </div>
         </div>
 
-        {/* Box Lokasi Manual (Maksimal 25 Karakter - Lega, Tidak Terpotong) */}
+        {/* Box Lokasi Manual (Maksimal 30 Karakter - Lega, Tidak Terpotong) */}
         <div className="boxPost">
           <div className="flex items-center justify-between w-full">
             <label htmlFor="loc" className="flex items-center gap-1.5 text-xs font-bold text-stone-700 select-none">
@@ -2244,10 +2245,10 @@ export const BuatKabarView: React.FC = () => {
             <span
               id="cLoc"
               className={`text-xs font-semibold ${
-                loc.length === 25 ? 'text-[#EAA000]' : 'text-stone-400'
+                loc.length === 30 ? 'text-[#EAA000]' : 'text-stone-400'
               }`}
             >
-              {loc.length}/25
+              {loc.length}/30
             </span>
           </div>
 
@@ -2256,9 +2257,9 @@ export const BuatKabarView: React.FC = () => {
               id="loc"
               type="text"
               placeholder="contoh Sengkang, Sulawesi Selatan"
-              maxLength={25}
+              maxLength={30}
               value={loc}
-              onChange={(e) => setLoc(e.target.value.slice(0, 25))}
+              onChange={(e) => setLoc(e.target.value.slice(0, 30))}
               className="w-full bg-transparent text-stone-900 text-sm font-medium outline-none border-none placeholder:text-stone-400"
             />
             {loc && (
@@ -2483,6 +2484,9 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
   return (
     <CustomScrollView className="h-full bg-white" contentClassName="pb-24">
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-7 space-y-8">
+        {/* Banner PWA Install (Muncul otomatis di browser mobile / desktop jika belum terinstall) */}
+        <PWAInstallPrompt />
+
         {/* Kartu Profil Google Sign-In */}
         <section className="p-6 rounded-2xl border border-stone-200 bg-stone-50/60">
           {user.isSignedIn ? (
