@@ -336,7 +336,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
         <div
           data-video-control="true"
           onClick={(e) => e.stopPropagation()}
-          className="absolute bottom-1.5 left-0 right-0 z-20 px-4 sm:px-6 pointer-events-auto select-none touch-none"
+          className="absolute bottom-4 left-0 right-0 z-20 px-4 sm:px-6 pointer-events-auto select-none touch-none"
         >
           <div className="flex items-center gap-3">
             {/* Area Sentuh & Geser Batang Durasi */}

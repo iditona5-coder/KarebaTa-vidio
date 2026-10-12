@@ -1151,7 +1151,7 @@ export const BerandaView: React.FC = () => {
                 {/* DERETAN TOMBOL AKSI DI SISI KANAN MEDIA: LOVE, SHARE, & TITIK 3 (MORE) */}
                 <div
                   style={{
-                    bottom: isCoverVideo ? '44px' : '28px'
+                    bottom: isCoverVideo ? '54px' : '28px'
                   }}
                   className="absolute right-3 sm:right-5 z-30 flex flex-col items-center gap-3.5 pointer-events-auto select-none"
                 >
@@ -1287,7 +1287,7 @@ export const BerandaView: React.FC = () => {
                 {/* 3 & 4. TEKS DI ATAS FOTO: Posisi di bawah seperti semula, tanpa bayangan teks (shadow) */}
                 <div
                   style={{
-                    bottom: isCoverVideo ? '44px' : '24px'
+                    bottom: isCoverVideo ? '54px' : '24px'
                   }}
                   className="absolute left-0 right-0 z-20 w-full px-4 sm:px-6 flex flex-col items-start pointer-events-none"
                 >
