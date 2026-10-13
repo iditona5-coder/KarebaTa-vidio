@@ -57,6 +57,8 @@ interface KarebataContextType {
   signInWithGoogle: (customName?: string, customEmail?: string, customLocation?: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
+  isChoosingUsername: boolean;
+  setUsernameAndGoToFeed: (username: string) => void;
   activeFeedIndex: number;
   setActiveFeedIndex: (idx: number) => void;
   viewportMode: ViewportMode;
@@ -84,7 +86,7 @@ interface KarebataContextType {
 const STORAGE_KEYS = {
   ARTICLES: 'kareba_articles_v1',
   SAVED_IDS: 'kareba_saved_ids_v1',
-  USER: 'kareba_user_v1'
+  USER: 'kareba_auth_user_v2'
 };
 
 const DEFAULT_USER: UserProfile = {
@@ -140,7 +142,12 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.USER);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.uid && parsed.isSignedIn === true) {
+          return parsed;
+        }
+      }
     } catch {
       // ignore
     }
@@ -228,11 +235,19 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUser((prev) => ({
           ...prev,
           uid: fbUser.uid,
-          displayName: fbUser.displayName || prev.displayName || 'Kontributor Kareba’Ta',
+          displayName: fbUser.displayName ? fbUser.displayName.slice(0, 13) : prev.displayName || 'Pengguna',
           email: fbUser.email || prev.email,
           photoURL: fbUser.photoURL || undefined,
           isSignedIn: true
         }));
+      } else {
+        setUser((prev) => {
+          if (prev.isSignedIn && prev.uid.startsWith('google-')) {
+            // Biarkan sesi lokal jika masuk lewat fallback popup
+            return prev;
+          }
+          return DEFAULT_USER;
+        });
       }
     });
 
@@ -420,13 +435,16 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return newArticle;
   };
 
+  const [isChoosingUsername, setIsChoosingUsername] = useState(false);
+
   const signInWithGoogle = async (customName?: string, customEmail?: string, customLocation?: string) => {
     try {
       const result = await signInWithPopup(auth, googleAuthProvider);
       const fbUser = result.user;
+      const initialName = (fbUser.displayName || customName?.trim() || 'Pengguna').slice(0, 13);
       const nextUser: UserProfile = {
         uid: fbUser.uid,
-        displayName: fbUser.displayName || customName?.trim() || 'Pengguna Kareba’Ta',
+        displayName: initialName,
         email: fbUser.email || customEmail?.trim() || '',
         roleTitle: 'Kontributor Terverifikasi',
         homeLocation: customLocation?.trim() || user.homeLocation || 'Sengkang, Sulawesi Selatan',
@@ -434,23 +452,38 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isSignedIn: true
       };
       setUser(nextUser);
-      showToast(`Berhasil masuk sebagai ${nextUser.displayName} via Google Firebase`);
-      setActiveTab('beranda');
+      setIsChoosingUsername(true);
+      setActiveTab('akun');
+      showToast('Berhasil masuk via Google! Silakan tentukan nama pengguna Anda');
     } catch (err: unknown) {
       console.warn('Google Popup SignIn Notice:', err);
       // Fallback jika iframe memblokir popup
+      const fallbackName = (customName?.trim() || 'Pengguna').slice(0, 13);
       const nextUser: UserProfile = {
         uid: `google-${Date.now()}`,
-        displayName: customName?.trim() || user.displayName || 'Andi Pallawa Gau',
+        displayName: fallbackName,
         email: customEmail?.trim() || user.email || 'puasa2768@gmail.com',
         roleTitle: 'Redaktur & Kontributor Lokal',
         homeLocation: customLocation?.trim() || user.homeLocation || 'Sengkang, Sulawesi Selatan',
         isSignedIn: true
       };
       setUser(nextUser);
-      showToast(`Masuk sebagai ${nextUser.displayName}`);
-      setActiveTab('beranda');
+      setIsChoosingUsername(true);
+      setActiveTab('akun');
+      showToast('Berhasil masuk via Google! Silakan tentukan nama pengguna Anda');
     }
+  };
+
+  const setUsernameAndGoToFeed = (username: string) => {
+    const cleanUsername = username.trim().slice(0, 13);
+    if (!cleanUsername) return;
+    setUser((prev) => ({
+      ...prev,
+      displayName: cleanUsername
+    }));
+    setIsChoosingUsername(false);
+    showToast(`Halo, ${cleanUsername}! Selamat menikmati kabar berita`);
+    setActiveTab('beranda');
   };
 
   const signOutUser = async () => {
@@ -459,6 +492,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err) {
       console.warn('Sign out notice:', err);
     }
+    setIsChoosingUsername(false);
     setUser((prev) => ({ ...prev, isSignedIn: false }));
     showToast('Berhasil keluar dari sesi Google Sign-In');
   };
@@ -539,6 +573,8 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         signInWithGoogle,
         signOutUser,
         updateUserProfile,
+        isChoosingUsername,
+        setUsernameAndGoToFeed,
         activeFeedIndex,
         setActiveFeedIndex,
         viewportMode,

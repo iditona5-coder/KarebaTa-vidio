@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import { getAnalytics, isSupported } from 'firebase/analytics';
 
 export const firebaseConfig = {
   apiKey: 'AIzaSyCIYga4scuibu7DvScxjy2LAyDZaC66zJM',
@@ -18,21 +17,6 @@ export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getA
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleAuthProvider = new GoogleAuthProvider();
-
-// Inisialisasi Google Analytics jika lingkungan mendukung (browser)
-if (typeof window !== 'undefined') {
-  isSupported()
-    .then((supported) => {
-      if (supported) {
-        try {
-          getAnalytics(app);
-        } catch {
-          // Abaikan jika ad-blocker atau restriksi privasi memblokir analytics
-        }
-      }
-    })
-    .catch(() => {});
-}
 
 export enum OperationType {
   CREATE = 'create',

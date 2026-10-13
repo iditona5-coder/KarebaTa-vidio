@@ -2585,12 +2585,23 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
     firebaseProjectId,
     imagekitStatus,
     imagekitEndpoint,
-    imagekitPublicKey
+    imagekitPublicKey,
+    setActiveTab,
+    isChoosingUsername,
+    setUsernameAndGoToFeed
   } = useKarebata();
 
   const [nameInput, setNameInput] = useState(user.displayName);
+  const [usernameDraft, setUsernameDraft] = useState(user.displayName.slice(0, 13));
   const [locationInput, setLocationInput] = useState(user.homeLocation);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Sync draft nama ketika user login
+  useEffect(() => {
+    if (user.displayName) {
+      setUsernameDraft(user.displayName.slice(0, 13));
+    }
+  }, [user.displayName]);
 
   const authoredArticles = articles.filter(
     (a) => a.authorName.toLowerCase() === user.displayName.toLowerCase()
@@ -2605,6 +2616,142 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
     setIsEditing(false);
   };
 
+  // 1. TAMPILAN BELUM LOGIN: Layar Masuk Google
+  if (!user.isSignedIn) {
+    return (
+      <div className="h-full w-full bg-white flex flex-col items-center justify-center p-6 text-center select-none animate-fadeIn">
+        <div className="w-full max-w-sm flex flex-col items-center">
+          {/* Logo Kareba'Ta */}
+          <div className="mb-6">
+            <KarebataBrandLogo pinSize={46} showTagline={true} theme="light" />
+          </div>
+
+          {/* Ikon Kunci / Akun */}
+          <div className="w-16 h-16 rounded-2xl bg-[#FF8C00]/10 text-[#FF8C00] flex items-center justify-center mb-5 shadow-xs">
+            <User className="w-8 h-8" />
+          </div>
+
+          <h1 className="font-editorial text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+            Masuk ke Akun Anda
+          </h1>
+
+          <p className="text-xs sm:text-sm text-stone-600 mt-2 leading-relaxed">
+            Nonton dan jelajahi kabar lokal tetap gratis dan bebas tanpa login. Masuk dengan akun Google untuk menerbitkan berita baru dari kamera/galeri Anda.
+          </p>
+
+          {/* Tombol Masuk dengan Google Resmi */}
+          <button
+            type="button"
+            onClick={() => signInWithGoogle()}
+            className="mt-6 w-full min-h-[50px] py-3 px-5 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 font-semibold text-sm border border-stone-300 shadow-sm hover:shadow transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
+          >
+            {/* Logo Google G */}
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
+            </svg>
+            <span>Masuk dengan Google</span>
+          </button>
+
+          {/* Tombol Kembali ke Beranda / Feed */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('beranda')}
+            className="mt-3 w-full py-2.5 text-xs text-stone-500 hover:text-stone-800 font-medium transition-colors cursor-pointer"
+          >
+            ← Kembali Menonton Feed Berita
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. TAMPILAN SETELAH LOGIN: Halaman Isi Nama Pengguna (Maksimal 13 Huruf) Sebelum Masuk ke Feed
+  if (isChoosingUsername) {
+    return (
+      <div className="h-full w-full bg-white flex flex-col items-center justify-center p-6 text-center select-none animate-fadeIn">
+        <div className="w-full max-w-sm flex flex-col items-center">
+          <div className="mb-5">
+            <KarebataBrandLogo pinSize={42} showTagline={true} theme="light" />
+          </div>
+
+          <div className="w-16 h-16 rounded-2xl bg-[#006837]/10 text-[#006837] flex items-center justify-center mb-4">
+            <span className="material-icons text-3xl">badge</span>
+          </div>
+
+          <h1 className="font-editorial text-2xl font-bold text-stone-900 tracking-tight">
+            Isi Nama Pengguna Anda
+          </h1>
+
+          <p className="text-xs text-stone-500 mt-1 mb-5 max-w-xs">
+            Nama ini akan muncul pada karya berita yang Anda terbitkan. Batas maksimal <strong>13 huruf</strong>.
+          </p>
+
+          {/* Form Input Nama Pengguna (Max 13 Huruf) */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (usernameDraft.trim().length > 0) {
+                setUsernameAndGoToFeed(usernameDraft);
+              }
+            }}
+            className="w-full space-y-4"
+          >
+            <div className="text-left">
+              <label htmlFor="username-input" className="block text-xs font-bold text-stone-700 mb-1">
+                Nama Pengguna
+              </label>
+              <div className="relative">
+                <input
+                  id="username-input"
+                  type="text"
+                  maxLength={13}
+                  value={usernameDraft}
+                  onChange={(e) => setUsernameDraft(e.target.value.slice(0, 13))}
+                  placeholder="Maks 13 huruf"
+                  autoFocus
+                  className="w-full min-h-[48px] px-4 pr-16 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 font-semibold text-sm focus:outline-none focus:border-[#006837] focus:bg-white transition-colors"
+                />
+                <span className={`absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-semibold ${
+                  usernameDraft.length >= 13 ? 'text-[#FF8C00]' : 'text-stone-400'
+                }`}>
+                  {usernameDraft.length}/13
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={usernameDraft.trim().length === 0}
+              className={`w-full min-h-[48px] py-3 px-5 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 ${
+                usernameDraft.trim().length > 0
+                  ? 'bg-[#006837] hover:bg-[#00542c] text-white cursor-pointer active:scale-[0.98]'
+                  : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+              }`}
+            >
+              <span>Lanjut ke Feed Berita</span>
+              <span className="material-icons text-base">arrow_forward</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <CustomScrollView className="h-full bg-white" contentClassName="pb-24">
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-7 space-y-8">
@@ -2613,70 +2760,52 @@ export const AkunView: React.FC<AkunViewProps> = ({ onOpenFlutterCode }) => {
 
         {/* Kartu Profil Google Sign-In */}
         <section className="p-6 rounded-2xl border border-stone-200 bg-stone-50/60">
-          {user.isSignedIn ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-[#006837] text-white font-editorial text-2xl font-semibold flex items-center justify-center shrink-0">
-                  {user.displayName.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#006837]">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Terhubung dengan Google Sign-In</span>
-                  </div>
-                  <h1 className="font-editorial text-2xl font-bold text-[#006837] mt-0.5">
-                    {user.displayName}
-                  </h1>
-                  <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5">
-                    <span>{user.email}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="text-[#EAA000] font-semibold flex items-center gap-0.5">
-                      <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
-                      {user.homeLocation}
-                    </span>
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-[#006837] text-white font-editorial text-2xl font-semibold flex items-center justify-center shrink-0">
+                {user.displayName.charAt(0).toUpperCase()}
               </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNameInput(user.displayName);
-                    setLocationInput(user.homeLocation);
-                    setIsEditing(!isEditing);
-                  }}
-                  className="min-h-[40px] px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-semibold text-stone-800 hover:bg-stone-100 transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  {isEditing ? 'Batal' : 'Ubah Profil'}
-                </button>
-                <button
-                  type="button"
-                  onClick={signOutUser}
-                  className="min-h-[40px] px-3.5 py-2 rounded-lg border border-stone-200 bg-white text-xs font-semibold text-stone-600 hover:text-red-700 hover:border-red-200 inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Keluar</span>
-                </button>
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-[#006837]">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Terhubung dengan Google Sign-In</span>
+                </div>
+                <h1 className="font-editorial text-2xl font-bold text-[#006837] mt-0.5">
+                  {user.displayName}
+                </h1>
+                <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5">
+                  <span>{user.email}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="text-[#EAA000] font-semibold flex items-center gap-0.5">
+                    <span className="material-icons text-[#EAA000]" style={{ fontSize: '13px' }}>location_on</span>
+                    {user.homeLocation}
+                  </span>
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-4">
-              <h1 className="font-editorial text-2xl font-semibold text-stone-900">
-                Masuk ke Akun Kareba&apos;Ta
-              </h1>
-              <p className="text-sm text-stone-600 max-w-md mx-auto mt-1">
-                Gunakan akun Google Anda untuk menerbitkan kabar berita lokal, mengelola arsip tersimpan, dan menyinkronkan profil penulis.
-              </p>
+
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => signInWithGoogle()}
-                className="mt-5 min-h-[46px] px-6 py-2.5 rounded-xl bg-[#006837] hover:bg-[#00542c] text-white text-sm font-semibold inline-flex items-center gap-2.5 shadow-sm transition-colors cursor-pointer"
+                onClick={() => {
+                  setNameInput(user.displayName);
+                  setLocationInput(user.homeLocation);
+                  setIsEditing(!isEditing);
+                }}
+                className="min-h-[40px] px-3.5 py-2 rounded-lg border border-stone-300 bg-white text-xs font-semibold text-stone-800 hover:bg-stone-100 transition-colors cursor-pointer whitespace-nowrap"
               >
-                <span>Masuk dengan Google (puasa2768@gmail.com)</span>
+                {isEditing ? 'Batal' : 'Ubah Profil'}
+              </button>
+              <button
+                type="button"
+                onClick={signOutUser}
+                className="min-h-[40px] px-3.5 py-2 rounded-lg border border-stone-200 bg-white text-xs font-semibold text-stone-600 hover:text-red-700 hover:border-red-200 inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Keluar</span>
               </button>
             </div>
-          )}
+          </div>
 
           {isEditing && user.isSignedIn && (
             <form noValidate onSubmit={handleSaveProfile} className="mt-5 pt-5 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
