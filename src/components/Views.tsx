@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BookOpen,
   Search,
@@ -526,6 +526,18 @@ export const BerandaView: React.FC = () => {
     showToast
   } = useKarebata();
 
+  // Selalu urutkan berita feed berdasarkan waktu upload dari yang terbaru ke terlama
+  const feedArticles = useMemo<NewsArticle[]>(() => {
+    return [...articles].sort((a, b) => {
+      const timeA = new Date(a.publishedAt).getTime();
+      const timeB = new Date(b.publishedAt).getTime();
+      if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
+        return timeB - timeA;
+      }
+      return b.id.localeCompare(a.id);
+    });
+  }, [articles]);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -594,23 +606,55 @@ export const BerandaView: React.FC = () => {
 
   // Pastikan activeFeedIndex selalu valid jika jumlah berita berubah
   useEffect(() => {
-    if (activeFeedIndex >= articles.length && articles.length > 0) {
-      setActiveFeedIndex(articles.length - 1);
+    if (activeFeedIndex >= feedArticles.length && feedArticles.length > 0) {
+      setActiveFeedIndex(feedArticles.length - 1);
     }
-  }, [articles.length, activeFeedIndex, setActiveFeedIndex]);
+  }, [feedArticles.length, activeFeedIndex, setActiveFeedIndex]);
 
   useEffect(() => {
     setExpandedArticleId(null);
     applyTrackTransform(activeFeedIndex, 0, true);
+
+    // Pastikan video pada kartu aktif selalu berputar ulang dari detik awal (00:00) saat di-scroll kembali
+    const track = trackRef.current;
+    if (track) {
+      Array.from(track.children).forEach((section, idx) => {
+        const video = section.querySelector('video') as HTMLVideoElement | null;
+        if (!video) return;
+        if (idx === activeFeedIndex) {
+          try {
+            video.currentTime = 0;
+          } catch {
+            // ignore
+          }
+          video.dataset.userPaused = 'false';
+          const p = video.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              video.muted = true;
+              video.play().catch(() => {});
+            });
+          }
+        } else {
+          video.pause();
+          try {
+            video.currentTime = 0;
+          } catch {
+            // ignore
+          }
+          video.dataset.userPaused = 'false';
+        }
+      });
+    }
   }, [activeFeedIndex]);
 
   // Fungsi inti: langsung narik kencang tepat 1 berita (tidak bisa lompat > 1 berita)
   const snapTightToCard = (targetIndex: number) => {
-    if (articles.length === 0) return;
+    if (feedArticles.length === 0) return;
 
     const singleStepIndex =
       targetIndex > activeFeedIndex
-        ? Math.min(articles.length - 1, activeFeedIndex + 1)
+        ? Math.min(feedArticles.length - 1, activeFeedIndex + 1)
         : targetIndex < activeFeedIndex
         ? Math.max(0, activeFeedIndex - 1)
         : activeFeedIndex;
@@ -649,7 +693,7 @@ export const BerandaView: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeFeedIndex, articles.length]);
+  }, [activeFeedIndex, feedArticles.length]);
 
   // Handler Wheel / Trackpad: non-passive e.preventDefault() agar browser tidak ikut scroll
   const handleWheelNative = useCallback(
@@ -679,7 +723,7 @@ export const BerandaView: React.FC = () => {
         snapTightToCard(activeFeedIndex - 1);
       }
     },
-    [activeFeedIndex, articles.length]
+    [activeFeedIndex, feedArticles.length]
   );
 
   // Mulai tarikan jari / mouse (enteng & langsung merespons tanpa jeda)
@@ -729,7 +773,7 @@ export const BerandaView: React.FC = () => {
       const rawDeltaY = clientY - dragStartYRef.current;
 
       const isAtTopEdge = activeFeedIndex === 0 && rawDeltaY > 0;
-      const isAtBottomEdge = activeFeedIndex === articles.length - 1 && rawDeltaY < 0;
+      const isAtBottomEdge = activeFeedIndex === feedArticles.length - 1 && rawDeltaY < 0;
 
       if (isAtTopEdge) {
         // Efek tarikan elastis (rubber-band) untuk Refresh di Berita Pertama
@@ -749,7 +793,7 @@ export const BerandaView: React.FC = () => {
       // Begitu video ter-scroll setengah, langsung hentikan putaran videonya
       syncActiveVideoDuringDrag(Math.abs(offsetPx), false);
     },
-    [activeFeedIndex, articles.length, syncActiveVideoDuringDrag]
+    [activeFeedIndex, feedArticles.length, syncActiveVideoDuringDrag]
   );
 
   // Begitu dilepas: langsung narik kencang tepat 1 berita berikutnya/sebelumnya, atau trigger refresh
@@ -785,7 +829,7 @@ export const BerandaView: React.FC = () => {
         (velocity >= SWIPE_VELOCITY_THRESHOLD && Math.abs(totalDeltaY) >= 8);
 
       if (shouldSnapNextOrPrev) {
-        if (totalDeltaY < 0 && activeFeedIndex < articles.length - 1) {
+        if (totalDeltaY < 0 && activeFeedIndex < feedArticles.length - 1) {
           snapTightToCard(activeFeedIndex + 1);
           return;
         }
@@ -800,7 +844,7 @@ export const BerandaView: React.FC = () => {
       applyTrackTransform(activeFeedIndex, 0, true);
       syncActiveVideoDuringDrag(0, true);
     },
-    [activeFeedIndex, articles.length, syncActiveVideoDuringDrag, triggerRefresh]
+    [activeFeedIndex, feedArticles.length, syncActiveVideoDuringDrag, triggerRefresh]
   );
 
   // Pasang native event listener { passive: false } agar 100% mematikan scroll bawaan browser
@@ -945,18 +989,24 @@ export const BerandaView: React.FC = () => {
             <Search className="w-[26px] h-[26px]" strokeWidth={2} />
           </button>
 
-          {/* Icon Kamera (Langsung Masuk ke Halaman Posting Kabar) */}
+          {/* Icon Kamera (Langsung Masuk ke Halaman Posting Kabar atau Login jika belum masuk) */}
           <button
             type="button"
             id="camBtn"
-            onClick={() => setActiveTab('buat')}
+            onClick={() => {
+              if (!user.isSignedIn) {
+                setActiveTab('akun');
+              } else {
+                setActiveTab('buat');
+              }
+            }}
             aria-label="Buat Kabar Baru"
             className="w-10 h-10 rounded-full text-stone-900 hover:bg-stone-100/80 active:scale-90 flex items-center justify-center transition-all cursor-pointer"
           >
             <Camera className="w-[26px] h-[26px]" strokeWidth={2} />
           </button>
 
-          {/* Icon Profil (Akun) */}
+          {/* Icon Profil (Akun / Login) */}
           <button
             type="button"
             onClick={() => setActiveTab('akun')}
@@ -1018,8 +1068,8 @@ export const BerandaView: React.FC = () => {
                     )}
                     {activeUpload.status === 'completed' && (
                       <>
-                        <span className="material-icons text-[#00A859] text-sm">check_circle</span>
-                        <span className="text-[#00A859] font-bold">Selesai diunggah!</span>
+                        <span className="material-icons text-[#FF8C00] text-sm">check_circle</span>
+                        <span className="text-[#FF8C00] font-bold">Selesai diunggah!</span>
                       </>
                     )}
                     {activeUpload.status === 'error' && (
@@ -1038,15 +1088,15 @@ export const BerandaView: React.FC = () => {
                   {activeUpload.title}
                 </p>
 
-                {/* Progress Bar Dinamis */}
+                {/* Progress Bar Dinamis (Orange #FF8C00 saat selesai) */}
                 <div className="w-full h-1.5 bg-stone-700/80 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-300 rounded-full ${
                       activeUpload.status === 'completed'
-                        ? 'bg-[#00A859]'
+                        ? 'bg-[#FF8C00]'
                         : activeUpload.status === 'error'
                         ? 'bg-rose-400'
-                        : 'bg-gradient-to-r from-[#EAA000] via-[#00A859] to-[#006837]'
+                        : 'bg-gradient-to-r from-[#EAA000] to-[#FF8C00]'
                     }`}
                     style={{ width: `${Math.min(100, Math.max(5, activeUpload.progress))}%` }}
                   />
@@ -1083,7 +1133,7 @@ export const BerandaView: React.FC = () => {
               style={{
                 transform: `rotate(${isRefreshing ? 0 : pullDistance * 4.5}deg)`
               }}
-              className={`w-4 h-4 text-[#006837] ${isRefreshing ? 'animate-spin' : ''}`}
+              className={`w-4 h-4 text-[#FF8C00] ${isRefreshing ? 'animate-spin' : ''}`}
             />
             <span className="text-xs font-bold text-stone-800 select-none">
               {isRefreshing
@@ -1138,7 +1188,7 @@ export const BerandaView: React.FC = () => {
           }}
           className="h-full w-full will-change-transform"
         >
-          {articles.map((article, index) => {
+          {feedArticles.map((article, index) => {
             const coverPhoto = article.photos[0];
             const isCurrentPage = index === activeFeedIndex;
             const isCoverVideo = coverPhoto
@@ -1225,7 +1275,7 @@ export const BerandaView: React.FC = () => {
                   }}
                   className="absolute right-3 sm:right-5 z-30 flex flex-col items-center gap-3.5 pointer-events-auto select-none"
                 >
-                  {/* 1. Tombol Love (Suka) */}
+                  {/* 1. Tombol Love (Suka) - Orange #FF8C00 */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1234,18 +1284,22 @@ export const BerandaView: React.FC = () => {
                     }}
                     title={likedArticleIds[article.id] ? 'Batal Suka' : 'Suka'}
                     aria-label={likedArticleIds[article.id] ? 'Batal Suka' : 'Suka'}
-                    className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/80 active:scale-85 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20 group"
+                    className={`w-10 h-10 rounded-full active:scale-85 backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-md border group ${
+                      likedArticleIds[article.id]
+                        ? 'bg-[#FF8C00]/20 border-[#FF8C00] text-[#FF8C00]'
+                        : 'bg-black/55 hover:bg-black/80 text-white hover:text-[#FF8C00] border-white/20'
+                    }`}
                   >
                     <Heart
                       className={`w-5 h-5 transition-transform duration-200 group-active:scale-125 ${
                         likedArticleIds[article.id]
-                          ? 'text-rose-500 fill-rose-500'
-                          : 'text-white'
+                          ? 'text-[#FF8C00] fill-[#FF8C00]'
+                          : 'text-white group-hover:text-[#FF8C00]'
                       }`}
                     />
                   </button>
 
-                  {/* 2. Tombol Share (Bagikan) */}
+                  {/* 2. Tombol Share (Bagikan) - Orange #FF8C00 */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1259,9 +1313,9 @@ export const BerandaView: React.FC = () => {
                     }}
                     title="Bagikan Kabar"
                     aria-label="Bagikan Kabar"
-                    className="w-10 h-10 rounded-full bg-black/55 hover:bg-black/80 active:scale-85 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-md border border-white/20 group"
+                    className="w-10 h-10 rounded-full bg-black/55 hover:bg-[#FF8C00]/20 active:scale-85 backdrop-blur-md text-[#FF8C00] hover:text-[#FF8C00] flex items-center justify-center transition-all cursor-pointer shadow-md border border-[#FF8C00]/60 group"
                   >
-                    <Share2 className="w-5 h-5 text-white transition-transform duration-200 group-active:scale-125" />
+                    <Share2 className="w-5 h-5 text-[#FF8C00] transition-transform duration-200 group-active:scale-125" />
                   </button>
 
                   {/* 3. Tombol Titik 3 (Opsi Lainnya) Tepat di Bawah Icon Share */}
@@ -1380,8 +1434,8 @@ export const BerandaView: React.FC = () => {
                     <div className="w-full flex flex-col gap-0.5 text-xs sm:text-sm tracking-wide">
                       {/* Baris Atas: Nama Pengguna & Waktu */}
                       <div className="flex items-center gap-x-2">
-                        <span className="text-[#00A859] font-bold flex items-center gap-1">
-                          <span className="material-icons text-[#00A859]" style={{ fontSize: '14px' }}>person</span>
+                        <span className="text-[#006837] bg-white/90 px-1.5 py-0.5 rounded font-bold flex items-center gap-1 shadow-xs">
+                          <span className="material-icons text-[#006837]" style={{ fontSize: '14px' }}>person</span>
                           {article.authorName}
                         </span>
                         <span className="text-white/60" aria-hidden="true">·</span>
@@ -1806,7 +1860,7 @@ const VideoCoverPickerModal: React.FC<VideoCoverPickerModalProps> = ({
       <div className="p-4 bg-stone-950 border-t border-stone-800 flex flex-col gap-3">
         <div className="flex items-center justify-between text-xs text-stone-400 px-1">
           <span className="flex items-center gap-1 font-medium">
-            <span className="material-icons text-sm text-[#00A859]">touch_app</span>
+            <span className="material-icons text-sm text-[#FF8C00]">touch_app</span>
             Geser timeline untuk memilih thumbnail video
           </span>
           <span className="font-mono text-stone-300 font-semibold">

@@ -287,7 +287,7 @@ export const NewsDetailSheet: React.FC = () => {
                           />
                           {isVid && (
                             <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/75 text-white text-[11px] font-medium inline-flex items-center gap-1">
-                              <Film className="w-3 h-3 text-[#00A859]" />
+                              <Film className="w-3 h-3 text-[#FF8C00]" />
                               <span>Video{photo.durationLabel ? ` · ${photo.durationLabel}` : ''}</span>
                             </div>
                           )}

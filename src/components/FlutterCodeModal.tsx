@@ -124,7 +124,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
           <div className="flex-1 flex flex-col overflow-hidden bg-stone-950 text-stone-100">
             <div className="px-5 py-3 bg-stone-900 border-b border-stone-800 flex items-center justify-between gap-4 shrink-0">
               <div className="min-w-0">
-                <div className="font-mono text-xs text-[#00A859] font-medium">
+                <div className="font-mono text-xs text-[#FF8C00] font-medium">
                   {activeFile.path}
                 </div>
                 <p className="text-xs text-stone-400 mt-0.5 truncate">{activeFile.description}</p>
@@ -136,7 +136,7 @@ export const FlutterCodeModal: React.FC<FlutterCodeModalProps> = ({ isOpen, onCl
               >
                 {copiedPath === activeFile.path ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-[#00A859]" />
+                    <Check className="w-3.5 h-3.5 text-[#FF8C00]" />
                     <span>Disalin</span>
                   </>
                 ) : (

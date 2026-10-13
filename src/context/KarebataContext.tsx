@@ -88,15 +88,28 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_USER: UserProfile = {
-  uid: 'google-uid-makassar-01',
-  displayName: 'Andi Pallawa Gau',
-  email: 'puasa2768@gmail.com',
-  roleTitle: 'Kontributor Jurnalis Warga',
-  homeLocation: 'Sengkang, Sulawesi Selatan',
-  isSignedIn: true
+  uid: '',
+  displayName: 'Tamu Kareba’Ta',
+  email: '',
+  roleTitle: 'Pembaca',
+  homeLocation: 'Sulawesi Selatan',
+  isSignedIn: false
 };
 
 const KarebataContext = createContext<KarebataContextType | undefined>(undefined);
+
+const sortArticlesByNewest = (list: NewsArticle[]): NewsArticle[] => {
+  return [...list].sort((a, b) => {
+    const timeA = new Date(a.publishedAt).getTime();
+    const timeB = new Date(b.publishedAt).getTime();
+    // Jika format waktu valid, urutkan terbaru di atas (descending)
+    if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
+      return timeB - timeA;
+    }
+    // Fallback ID timestamp jika ada
+    return b.id.localeCompare(a.id);
+  });
+};
 
 export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [articles, setArticles] = useState<NewsArticle[]>(() => {
@@ -104,12 +117,14 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const raw = localStorage.getItem(STORAGE_KEYS.ARTICLES);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return sortArticlesByNewest(parsed);
+        }
       }
     } catch {
       // ignore storage errors
     }
-    return INITIAL_NEWS_ARTICLES;
+    return sortArticlesByNewest(INITIAL_NEWS_ARTICLES);
   });
 
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -385,8 +400,8 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       readTimeMinutes
     };
 
-    // Update state aplikasi seketika untuk UX responsif
-    setArticles((prev) => [newArticle, ...prev]);
+    // Update state aplikasi seketika untuk UX responsif (selalu terurut terbaru di atas)
+    setArticles((prev) => sortArticlesByNewest([newArticle, ...prev]));
     setActiveFeedIndex(0);
     input.onProgress?.(90);
 
@@ -420,6 +435,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
       setUser(nextUser);
       showToast(`Berhasil masuk sebagai ${nextUser.displayName} via Google Firebase`);
+      setActiveTab('beranda');
     } catch (err: unknown) {
       console.warn('Google Popup SignIn Notice:', err);
       // Fallback jika iframe memblokir popup
@@ -433,6 +449,7 @@ export const KarebataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
       setUser(nextUser);
       showToast(`Masuk sebagai ${nextUser.displayName}`);
+      setActiveTab('beranda');
     }
   };
 

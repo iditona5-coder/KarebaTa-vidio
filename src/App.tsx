@@ -66,7 +66,8 @@ const KarebataShell: React.FC = () => {
     activeTab,
     setActiveTab,
     viewportMode,
-    toastMessage
+    toastMessage,
+    user
   } = useKarebata();
 
   const [isFlutterCodeOpen, setIsFlutterCodeOpen] = useState(false);
@@ -100,7 +101,7 @@ const KarebataShell: React.FC = () => {
                   aria-label="Cari Berita"
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'cari'
-                      ? 'text-[#006837]'
+                      ? 'text-[#FF8C00]'
                       : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >
@@ -108,7 +109,13 @@ const KarebataShell: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('buat')}
+                  onClick={() => {
+                    if (!user.isSignedIn) {
+                      setActiveTab('akun');
+                    } else {
+                      setActiveTab('buat');
+                    }
+                  }}
                   aria-label="Buat Kabar"
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer text-stone-900 hover:bg-stone-100/80"
                 >
@@ -120,7 +127,7 @@ const KarebataShell: React.FC = () => {
                   aria-label="Akun & Profil"
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                     activeTab === 'akun' || activeTab === 'tersimpan'
-                      ? 'text-[#006837]'
+                      ? 'text-[#FF8C00]'
                       : 'text-stone-900 hover:bg-stone-100/80'
                   }`}
                 >

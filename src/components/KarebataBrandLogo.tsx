@@ -30,8 +30,8 @@ export const KarebataBrandLogo: React.FC<KarebataBrandLogoProps> = ({
   const BRAND_YELLOW = '#EAA000'; // Kuning Emas Pin, Ta & Tagline
   const isBadge = variant === 'badge';
   const isLight = isBadge || theme === 'light';
-  // Hijau tua botol (#006837) di latar belakang putih / terang, hijau cerah (#00A859) di latar gelap
-  const BRAND_GREEN = isLight ? '#006837' : '#00A859';
+  // Logo tetap hijau tua (#006837) dan orange/kuning emas (#EAA000)
+  const BRAND_GREEN = '#006837';
 
   // Perhitungan ukuran tipografi dinamis & proporsional berdasarkan pinSize (tampilan profesional)
   const titleFontSize = Math.max(20, Math.round(pinSize * 0.74));

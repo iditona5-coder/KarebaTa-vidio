@@ -76,14 +76,24 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     if (isActive) {
       setIsUserPaused(false);
       videoEl.dataset.userPaused = 'false';
-      videoEl.currentTime = 0;
+      try {
+        videoEl.currentTime = 0;
+      } catch {
+        // ignore
+      }
       setCurrentTime(0);
+
       const playPromise = videoEl.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => setIsPlaying(true))
           .catch(() => {
             videoEl.muted = true;
+            try {
+              videoEl.currentTime = 0;
+            } catch {
+              // ignore
+            }
             videoEl
               .play()
               .then(() => setIsPlaying(true))
@@ -92,7 +102,11 @@ export const SmartImage: React.FC<SmartImageProps> = ({
       }
     } else {
       videoEl.pause();
-      videoEl.currentTime = 0;
+      try {
+        videoEl.currentTime = 0;
+      } catch {
+        // ignore
+      }
       setCurrentTime(0);
       setIsPlaying(false);
       setIsUserPaused(false);
@@ -346,15 +360,15 @@ export const SmartImage: React.FC<SmartImageProps> = ({
               className="flex-1 h-7 flex items-center cursor-pointer touch-none"
             >
               <div className="w-full h-1.5 bg-white/30 rounded-full relative">
-                {/* Batang Terisi */}
+                {/* Batang Terisi (Orange #FF8C00) */}
                 <div
                   style={{ width: `${progressPercent}%` }}
-                  className="h-full bg-[#00A859] rounded-full"
+                  className="h-full bg-[#FF8C00] rounded-full"
                 />
                 {/* Titik Geser (Thumb) */}
                 <div
                   style={{ left: `${progressPercent}%` }}
-                  className="w-4 h-4 rounded-full bg-white border-2 border-[#006837] shadow-md absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                  className="w-4 h-4 rounded-full bg-white border-2 border-[#FF8C00] shadow-md absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
                 />
               </div>
             </div>
